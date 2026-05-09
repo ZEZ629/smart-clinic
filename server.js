@@ -90,8 +90,28 @@ function detectHealth(bpm) {
   return "Norm";
 }
 
-// ── PAGES ───────────────────────────────────────────────────────────────────
+// ── PAGES ─────────────────────────────────
 
+app.get("/", (req, res) => {
+  res.sendFile(path.resolve(__dirname, "index.html"));
+});
+
+app.get("/result", (req, res) => {
+  console.log("RESULT PAGE OPENED");
+  res.sendFile(path.resolve(__dirname, "result.html"));
+});
+
+app.get("/results", (req, res) => {
+  res.json(results);
+});
+
+app.get("/admin", (req, res) => {
+  res.sendFile(path.resolve(__dirname, "admin.html"));
+});
+
+app.get("/api", (req, res) => {
+  res.json({ status: "Smart Clinic API v4.0" });
+});
 // ── PUBLIC: ADD PATIENT ─────────────────────────────────────────────────────
 app.post("/add", (req, res) => {
   const { name, phone, age } = req.body || {};

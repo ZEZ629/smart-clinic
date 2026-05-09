@@ -8,10 +8,20 @@ const cors    = require("cors");
 const fs      = require("fs");
 const path    = require("path");
 
+const rateLimit = require("express-rate-limit");
 let compression;
 try { compression = require("compression"); } catch { compression = null; }
 
 const app = express();
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 100,
+  message: {
+    error: "Too many requests, please try again later."
+  }
+});
+
+app.use(limiter);
 
 app.disable("x-powered-by");
 if (compression) app.use(compression());
@@ -81,13 +91,6 @@ function detectHealth(bpm) {
 }
 
 // ── PAGES ───────────────────────────────────────────────────────────────────
-app.get("/",       (req, res) => res.sendFile(path.join(__dirname, "index.html")));
-app.get("/result", (req, res) => res.sendFile(path.join(__dirname, "result.html")));
-app.get("/result-test", (req, res) => {
-  res.send("RESULT ROUTE WORKING");
-});
-app.get("/admin",  (req, res) => res.sendFile(path.join(__dirname, "admin.html")));
-app.get("/api",    (req, res) => res.json({ status: "Smart Clinic API v4.0" }));
 
 // ── PUBLIC: ADD PATIENT ─────────────────────────────────────────────────────
 app.post("/add", (req, res) => {
@@ -277,19 +280,27 @@ app.put("/admin/result/:idx", authMiddleware, (req, res) => {
 // Delete result
 app.delete("/admin/result/:idx", authMiddleware, (req, res) => {
   const i = parseInt(req.params.idx);
-  if (i < 0 || i >= results.length) return res.status(404).json({ error: "Not found" });
+  if (i < 0 || i >= results.length)
+    return res.status(404).json({ error: "Not found" });
+
   const [removed] = results.splice(i, 1);
   saveData();
+
   res.json({ status: "Deleted", removed });
 });
 
-app.use((req, res) => res.status(404).json({ error: "Not found" }));
+app.get("/results", (req, res) => {
+  res.json(results);
+});
+
+app.use((req, res) =>
+  res.status(404).json({ error: "Not found" })
+);
 
 const PORT = process.env.PORT || 3000;
+
 loadData();
+
 app.listen(PORT, "0.0.0.0", () => {
   console.log(`🚀 Smart Clinic v4.0 → http://localhost:${PORT}`);
-  console.log(`🔑 Default admin password: ${ADMIN_PASSWORD}`);
-  console.log(`Admin page    → http://localhost:${PORT}/admin`);
-  console.log(`   Set ADMIN_PASSWORD env var to override`);
 });

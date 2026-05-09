@@ -7,7 +7,7 @@
 #include <WiFi.h>
 #include <HTTPClient.h>
 #include <Wire.h>
-#include <LiquidCrystal_I2C.h>d:\project\sketch_may6a
+#include <LiquidCrystal_I2C.h>
 #include <OneWire.h>
 #include <DallasTemperature.h>
 #include <ArduinoJson.h>
@@ -19,7 +19,7 @@
 const char* ssid = "Only one";
 const char* password = "Onlyone1";
 
-String serverUrl = "http://192.168.1.14:3000";
+String serverUrl = "https://smart-clinic-production-eb18.up.railway.app";
 
 // ================= PINS =================
 

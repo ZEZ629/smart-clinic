@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#070f1c">
+<title>Medical Result — العيادة الذكية</title>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --teal:#0d9488;--teal-light:#14b8a6;--teal-dark:#0f766e;
+  --navy:#070f1c;--navy-mid:#0c1a2e;--navy-card:#112240;
+  --accent:#38bdf8;--accent2:#a78bfa;--white:#f0f9ff;
+  --muted:#94a3b8;--success:#10b981;--danger:#f43f5e;--warning:#f59e0b;
+  --space-xs:clamp(4px,1vw,8px);--space-sm:clamp(8px,2vw,14px);
+  --space-md:clamp(14px,3vw,22px);--space-lg:clamp(20px,4vw,32px);--space-xl:clamp(28px,5vw,44px);
+  --text-xs:clamp(0.68rem,1.8vw,0.75rem);--text-sm:clamp(0.75rem,2vw,0.85rem);
+  --text-base:clamp(0.88rem,2.5vw,1rem);--text-lg:clamp(1rem,3vw,1.2rem);
+  --text-xl:clamp(1.1rem,3.5vw,1.4rem);--text-2xl:clamp(1.3rem,4vw,1.7rem);
+  --touch-min:44px;
+  --radius-sm:clamp(8px,2vw,12px);--radius-md:clamp(12px,3vw,16px);--radius-lg:clamp(16px,4vw,22px);
+}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%;font-size:16px}
+body{
+  font-family:'Tajawal',sans-serif;background:var(--navy);min-height:100vh;min-height:100dvh;
+  overflow-x:hidden;overflow-y:auto;color:var(--white);
+  display:flex;flex-direction:column;align-items:center;justify-content:flex-start;
+  padding:clamp(14px,3vw,28px) clamp(12px,3vw,20px) clamp(32px,5vw,50px);
+  padding-top:max(clamp(14px,3vw,28px),env(safe-area-inset-top));
+  padding-bottom:max(clamp(32px,5vw,50px),env(safe-area-inset-bottom));
+  padding-left:max(clamp(12px,3vw,20px),env(safe-area-inset-left));
+  padding-right:max(clamp(12px,3vw,20px),env(safe-area-inset-right));
+  position:relative;width:100%;
+}
+body.has-notice{padding-top:max(clamp(70px,14vw,90px),env(safe-area-inset-top))}
+
+/* ── NOTICE BAR ── */
+#noticeBar{
+  position:fixed;top:0;left:0;right:0;z-index:200;
+  display:flex;align-items:center;justify-content:space-between;gap:10px;
+  padding:10px clamp(14px,4vw,28px);
+  background:rgba(13,148,136,0.12);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  border-bottom:1px solid rgba(13,148,136,0.3);box-shadow:0 2px 20px rgba(13,148,136,0.15);
+  animation:noticeSlideIn 0.5s cubic-bezier(0.16,1,0.3,1) both;
+}
+@keyframes noticeSlideIn{from{transform:translateY(-100%);opacity:0}to{transform:translateY(0);opacity:1}}
+.notice-inner{display:flex;align-items:center;gap:10px;flex:1;min-width:0}
+.notice-icon{font-size:1rem;flex-shrink:0;color:var(--teal-light)}
+.notice-text{font-size:var(--text-xs);color:var(--teal-light);font-weight:500;line-height:1.4}
+.notice-close{width:28px;height:28px;border-radius:50%;border:1px solid rgba(13,148,136,0.3);background:rgba(13,148,136,0.1);color:var(--teal-light);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:0.75rem;transition:all 0.2s;flex-shrink:0}
+.notice-close:hover{background:rgba(13,148,136,0.25);transform:scale(1.1)}
+
+/* ── LANG SWITCHER ── */
+#langSwitcher{
+  position:fixed;top:clamp(10px,2vw,16px);right:clamp(10px,2vw,16px);z-index:300;
+  display:flex;align-items:center;gap:4px;
+  background:rgba(22,40,68,0.85);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  border:1px solid rgba(13,148,136,0.3);border-radius:30px;padding:4px;
+  box-shadow:0 4px 20px rgba(0,0,0,0.3),0 0 20px rgba(13,148,136,0.15),0 0 0 1px rgba(20,184,166,0.08);
+}
+html[dir="rtl"] #langSwitcher{right:auto;left:clamp(10px,2vw,16px)}
+.lang-btn{padding:6px 14px;border-radius:22px;border:none;cursor:pointer;font-family:'Tajawal',sans-serif;font-size:0.72rem;font-weight:700;background:transparent;color:var(--muted);transition:all 0.3s cubic-bezier(0.16,1,0.3,1);white-space:nowrap;letter-spacing:0.2px}
+.lang-btn.active{background:linear-gradient(135deg,var(--teal),var(--teal-dark));color:#fff;box-shadow:0 2px 14px rgba(13,148,136,0.5),0 0 20px rgba(13,148,136,0.2)}
+.lang-btn:hover:not(.active){color:var(--white);background:rgba(13,148,136,0.14);transform:scale(1.04)}
+
+/* ── BG ── */
+.bg-canvas{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden;will-change:transform}
+.orb{position:absolute;border-radius:50%;filter:blur(clamp(60px,10vw,90px));animation:orbPulse 9s ease-in-out infinite alternate;will-change:transform}
+.orb1{width:clamp(130px,30vw,360px);height:clamp(130px,30vw,360px);background:radial-gradient(circle,rgba(13,148,136,0.18),transparent 70%);top:-60px;right:-60px}
+.orb2{width:clamp(110px,25vw,300px);height:clamp(110px,25vw,300px);background:radial-gradient(circle,rgba(56,189,248,0.12),transparent 70%);bottom:-50px;left:-30px;animation-delay:-4.5s}
+.orb3{width:clamp(90px,18vw,240px);height:clamp(90px,18vw,240px);background:radial-gradient(circle,rgba(167,139,250,0.1),transparent 70%);top:40%;right:10%;animation-delay:-2s}
+@keyframes orbPulse{from{transform:scale(1)}to{transform:scale(1.3)}}
+.ecg-bg{position:absolute;bottom:80px;left:0;width:200%;height:clamp(28px,5vw,44px);opacity:0.07;animation:moveLeft 10s linear infinite}
+@keyframes moveLeft{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+
+/* ── CONTENT ── */
+.content{position:relative;z-index:10;width:100%;max-width:min(560px,calc(100vw - 24px));animation:fadeUp 0.6s cubic-bezier(0.16,1,0.3,1) both}
+@keyframes fadeUp{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)}}
+
+.back-btn{display:inline-flex;align-items:center;gap:8px;padding:clamp(8px,2vw,10px) clamp(14px,3vw,18px);background:rgba(12,26,46,0.7);border:1px solid rgba(148,163,184,0.12);border-radius:30px;color:var(--muted);font-family:'Tajawal',sans-serif;font-size:var(--text-sm);cursor:pointer;transition:all 0.2s;text-decoration:none;margin-bottom:var(--space-md);touch-action:manipulation;min-height:var(--touch-min)}
+.back-btn:hover{background:rgba(13,148,136,0.12);border-color:rgba(13,148,136,0.25);color:var(--teal-light)}
+
+.page-header{text-align:center;margin-bottom:var(--space-lg)}
+.page-icon{width:clamp(52px,13vw,72px);height:clamp(52px,13vw,72px);background:linear-gradient(135deg,var(--teal),var(--teal-dark));border-radius:clamp(14px,3vw,18px);display:flex;align-items:center;justify-content:center;font-size:clamp(1.3rem,3.5vw,1.9rem);margin:0 auto clamp(10px,2.5vw,14px);box-shadow:0 8px 24px rgba(13,148,136,0.4),0 0 40px rgba(13,148,136,0.15);animation:iconPulse 3s ease-in-out infinite;position:relative;overflow:hidden;flex-shrink:0}
+.page-icon::after{content:'';position:absolute;inset:0;background:linear-gradient(45deg,transparent 40%,rgba(255,255,255,0.12) 50%,transparent 60%);animation:shimmer 3s ease-in-out infinite}
+@keyframes shimmer{0%,100%{transform:translateX(-200%) translateY(-200%)}50%{transform:translateX(200%) translateY(200%)}}
+@keyframes iconPulse{0%,100%{box-shadow:0 8px 24px rgba(13,148,136,0.4),0 0 40px rgba(13,148,136,0.15)}50%{box-shadow:0 8px 32px rgba(13,148,136,0.6),0 0 60px rgba(13,148,136,0.3)}}
+.page-title{font-size:var(--text-2xl);font-weight:900;background:linear-gradient(135deg,var(--white),var(--teal-light));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:6px}
+.page-sub{font-size:var(--text-sm);color:var(--muted);line-height:1.5}
+
+.search-card{background:rgba(17,34,64,0.88);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid rgba(13,148,136,0.22);border-radius:var(--radius-lg);padding:var(--space-lg);margin-bottom:var(--space-md);box-shadow:0 20px 50px rgba(0,0,0,0.4),inset 0 1px 0 rgba(255,255,255,0.06);width:100%}
+.field{margin-bottom:var(--space-md);width:100%}
+.field:last-of-type{margin-bottom:0}
+label{display:block;font-size:var(--text-xs);color:var(--muted);margin-bottom:6px;font-weight:500}
+.input-wrap{position:relative;width:100%}
+.input-icon{position:absolute;right:13px;top:50%;transform:translateY(-50%);font-size:clamp(0.9rem,2.5vw,1rem);opacity:0.45;transition:opacity 0.2s;pointer-events:none;line-height:1}
+html[dir="ltr"] .input-icon{right:auto;left:13px}
+input[type="text"],input[type="tel"]{
+  width:100%;background:rgba(7,15,28,0.7);border:1px solid rgba(148,163,184,0.12);
+  border-radius:var(--radius-md);
+  padding:clamp(12px,2.8vw,15px) clamp(42px,9vw,50px) clamp(12px,2.8vw,15px) 14px;
+  color:var(--white);font-family:'Tajawal',sans-serif;font-size:16px;
+  min-height:var(--touch-min);transition:all 0.25s;outline:none;
+  -webkit-appearance:none;appearance:none;caret-color:var(--teal-light);touch-action:manipulation;
+}
+html[dir="ltr"] input[type="text"],html[dir="ltr"] input[type="tel"]{
+  padding:clamp(12px,2.8vw,15px) 14px clamp(12px,2.8vw,15px) clamp(42px,9vw,50px);
+}
+input::placeholder{color:rgba(148,163,184,0.35)}
+input:focus{border-color:var(--teal);background:rgba(7,15,28,0.9);box-shadow:0 0 0 3px rgba(13,148,136,0.15),0 4px 12px rgba(0,0,0,0.2)}
+input:focus+.input-icon{opacity:1}
+.search-hint{font-size:var(--text-xs);color:var(--muted);margin-top:10px;text-align:center;opacity:0.7;line-height:1.4}
+
+.btn-search{width:100%;min-height:var(--touch-min);padding:clamp(12px,3vw,15px) 16px;background:linear-gradient(135deg,var(--teal),var(--teal-dark));border:none;border-radius:var(--radius-md);font-family:'Tajawal',sans-serif;font-size:var(--text-base);font-weight:700;color:white;cursor:pointer;position:relative;overflow:hidden;transition:all 0.25s;margin-top:var(--space-sm);touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+.btn-search::before{content:'';position:absolute;top:0;left:-100%;width:100%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.15),transparent);transition:left 0.4s}
+.btn-search:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 8px 24px rgba(13,148,136,0.4)}
+.btn-search:hover:not(:disabled)::before{left:100%}
+.btn-search:active:not(:disabled){transform:translateY(0) scale(0.98)}
+.btn-search:disabled{opacity:0.6;cursor:not-allowed}
+.btn-text{position:relative;z-index:1;display:flex;align-items:center;justify-content:center;gap:8px}
+.spinner{display:inline-block;width:17px;height:17px;border:2px solid rgba(255,255,255,0.25);border-top-color:white;border-radius:50%;animation:spin 0.7s linear infinite;flex-shrink:0}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+.result-card{background:rgba(17,34,64,0.9);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-radius:var(--radius-lg);padding:var(--space-lg);box-shadow:0 20px 50px rgba(0,0,0,0.4);animation:popUp 0.5s cubic-bezier(0.16,1,0.3,1) both;display:none;position:relative;overflow:hidden;width:100%}
+.result-card.show{display:block}
+@keyframes popUp{from{opacity:0;transform:scale(0.92) translateY(20px)}to{opacity:1;transform:scale(1) translateY(0)}}
+.result-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
+.result-card.norm::before{background:linear-gradient(90deg,var(--success),#059669)}
+.result-card.high::before{background:linear-gradient(90deg,var(--danger),#e11d48)}
+.result-card.low::before{background:linear-gradient(90deg,var(--accent),#0ea5e9)}
+.result-card.norm{border:1px solid rgba(16,185,129,0.3);box-shadow:0 20px 50px rgba(0,0,0,0.4),0 0 40px rgba(16,185,129,0.08)}
+.result-card.high{border:1px solid rgba(244,63,94,0.3);box-shadow:0 20px 50px rgba(0,0,0,0.4),0 0 40px rgba(244,63,94,0.08)}
+.result-card.low{border:1px solid rgba(56,189,248,0.3);box-shadow:0 20px 50px rgba(0,0,0,0.4),0 0 40px rgba(56,189,248,0.08)}
+
+.result-header{display:flex;align-items:center;gap:clamp(10px,2.5vw,16px);margin-bottom:var(--space-md);flex-wrap:nowrap;min-width:0}
+.result-avatar{width:clamp(46px,12vw,64px);height:clamp(46px,12vw,64px);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:clamp(1.2rem,3.5vw,1.8rem);flex-shrink:0;animation:avatarPulse 2.5s ease-in-out infinite}
+.result-avatar.norm{background:linear-gradient(135deg,rgba(16,185,129,0.25),rgba(5,150,105,0.4));box-shadow:0 6px 20px rgba(16,185,129,0.3)}
+.result-avatar.high{background:linear-gradient(135deg,rgba(244,63,94,0.25),rgba(225,29,72,0.4));box-shadow:0 6px 20px rgba(244,63,94,0.3)}
+.result-avatar.low{background:linear-gradient(135deg,rgba(56,189,248,0.25),rgba(14,165,233,0.4));box-shadow:0 6px 20px rgba(56,189,248,0.3)}
+@keyframes avatarPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}
+.result-title-wrap{flex:1;min-width:0}
+.result-patient-name{font-size:var(--text-xl);font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.result-datetime{font-size:var(--text-xs);color:var(--muted);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+.health-status-badge{display:inline-flex;align-items:center;gap:6px;padding:clamp(4px,1.2vw,6px) clamp(10px,2.5vw,14px);border-radius:20px;font-size:var(--text-sm);font-weight:700;margin-bottom:var(--space-md);max-width:100%}
+.health-status-badge.norm{background:rgba(16,185,129,0.12);border:1px solid rgba(16,185,129,0.3);color:#34d399}
+.health-status-badge.high{background:rgba(244,63,94,0.12);border:1px solid rgba(244,63,94,0.3);color:#fb7185}
+.health-status-badge.low{background:rgba(56,189,248,0.12);border:1px solid rgba(56,189,248,0.3);color:var(--accent)}
+.health-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;animation:blink 1.5s infinite}
+.norm .health-dot{background:#34d399}.high .health-dot{background:#fb7185}.low .health-dot{background:var(--accent)}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0.35}}
+
+.vitals-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100px,calc(33% - 10px)),1fr));gap:clamp(8px,2.5vw,14px);margin-bottom:var(--space-md);width:100%}
+.vital-card{background:rgba(7,15,28,0.5);border:1px solid rgba(148,163,184,0.1);border-radius:var(--radius-md);padding:clamp(10px,2.5vw,16px) clamp(8px,2vw,14px);text-align:center;transition:all 0.2s;min-width:0}
+.vital-card:hover{background:rgba(13,148,136,0.08);border-color:rgba(13,148,136,0.2)}
+.vital-icon{font-size:clamp(1.1rem,3vw,1.6rem);margin-bottom:6px;line-height:1}
+.vital-value{font-size:clamp(0.95rem,3.5vw,1.4rem);font-weight:900;line-height:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.vital-value.bpm-norm{color:#34d399}.vital-value.bpm-high{color:#fb7185}.vital-value.bpm-low{color:var(--accent)}
+.vital-label{font-size:var(--text-xs);color:var(--muted);margin-top:4px;line-height:1.3}
+
+.info-pills{display:flex;flex-wrap:wrap;gap:clamp(6px,1.5vw,10px);width:100%}
+.pill{display:flex;align-items:center;gap:5px;background:rgba(12,26,46,0.6);border:1px solid rgba(148,163,184,0.1);border-radius:20px;padding:clamp(4px,1.2vw,6px) clamp(10px,2.5vw,13px);font-size:var(--text-xs);color:var(--muted);white-space:nowrap}
+
+.not-found{background:rgba(17,34,64,0.88);backdrop-filter:blur(20px);border:1px solid rgba(244,63,94,0.2);border-radius:var(--radius-lg);padding:clamp(24px,6vw,44px) clamp(18px,4vw,32px);text-align:center;display:none;animation:popUp 0.4s cubic-bezier(0.16,1,0.3,1) both;width:100%}
+.not-found.show{display:block}
+.nf-icon{font-size:clamp(2.2rem,6vw,3.5rem);margin-bottom:14px;animation:shake 0.5s ease both}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
+.nf-title{font-size:var(--text-lg);font-weight:900;color:#fb7185;margin-bottom:8px}
+.nf-sub{font-size:var(--text-sm);color:var(--muted);line-height:1.6}
+
+.toast{position:fixed;bottom:max(clamp(16px,4vw,28px),env(safe-area-inset-bottom,16px));left:50%;transform:translateX(-50%) translateY(100px);background:rgba(12,26,46,0.97);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid var(--teal);border-radius:var(--radius-md);padding:clamp(10px,2.5vw,12px) clamp(16px,4vw,22px);font-size:var(--text-sm);font-weight:600;color:var(--teal-light);z-index:999;transition:transform 0.35s cubic-bezier(0.16,1,0.3,1);box-shadow:0 8px 24px rgba(0,0,0,0.4);white-space:nowrap;max-width:calc(100vw - 32px);overflow:hidden;text-overflow:ellipsis}
+.toast.show{transform:translateX(-50%) translateY(0)}
+.toast.error{border-color:var(--danger);color:#f87171}
+
+/* ── FOOTER ── */
+.smart-footer{position:relative;z-index:20;width:100%;margin-top:clamp(28px,6vw,52px);padding:clamp(18px,4vw,28px) clamp(16px,5vw,40px);background:linear-gradient(135deg,rgba(7,15,28,0.96) 0%,rgba(12,26,46,0.94) 50%,rgba(17,34,64,0.96) 100%);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border-top:1px solid rgba(13,148,136,0.22);box-shadow:0 -8px 40px rgba(0,0,0,0.35),inset 0 1px 0 rgba(255,255,255,0.04),0 0 80px rgba(13,148,136,0.06);overflow:hidden}
+.footer-glow{position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent 0%,rgba(13,148,136,0.6) 20%,rgba(56,189,248,0.8) 50%,rgba(13,148,136,0.6) 80%,transparent 100%);animation:glowSweep 4s ease-in-out infinite alternate}
+@keyframes glowSweep{from{opacity:0.5;transform:scaleX(0.7)}to{opacity:1;transform:scaleX(1)}}
+.smart-footer::before{content:'';position:absolute;width:300px;height:300px;border-radius:50%;background:radial-gradient(circle,rgba(13,148,136,0.06),transparent 70%);top:-120px;left:50%;transform:translateX(-50%);filter:blur(40px);animation:footerOrbPulse 6s ease-in-out infinite alternate;pointer-events:none}
+@keyframes footerOrbPulse{from{opacity:0.6;transform:translateX(-50%) scale(0.9)}to{opacity:1;transform:translateX(-50%) scale(1.1)}}
+.footer-content{position:relative;z-index:1;display:flex;align-items:center;justify-content:space-between;gap:clamp(16px,3vw,24px);flex-wrap:wrap;max-width:1400px;margin:0 auto}
+.footer-brand h3{font-family:'Tajawal',sans-serif;font-size:clamp(1rem,2.5vw,1.25rem);font-weight:900;letter-spacing:-0.3px;background:linear-gradient(135deg,#f0f9ff 0%,#14b8a6 60%,#38bdf8 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;background-size:200% auto;animation:gradientShift 4s ease-in-out infinite alternate;margin-bottom:5px}
+@keyframes gradientShift{from{background-position:0% center}to{background-position:100% center}}
+.footer-brand p{font-family:'Tajawal',sans-serif;font-size:clamp(0.72rem,1.8vw,0.82rem);color:#94a3b8;font-weight:400;line-height:1.5}
+.footer-brand p strong{font-weight:800;color:#14b8a6;text-shadow:0 0 12px rgba(20,184,166,0.4)}
+.footer-social{display:flex;align-items:center;gap:clamp(8px,1.8vw,12px);flex-wrap:wrap}
+.social-btn{width:clamp(38px,7vw,46px);height:clamp(38px,7vw,46px);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:clamp(0.9rem,2vw,1.05rem);color:#94a3b8;text-decoration:none;position:relative;overflow:hidden;transition:transform 0.28s cubic-bezier(0.16,1,0.3,1),box-shadow 0.28s ease,color 0.28s ease,background 0.28s ease,border-color 0.28s ease;background:rgba(22,40,68,0.7);border:1px solid rgba(148,163,184,0.12);backdrop-filter:blur(10px);touch-action:manipulation}
+.social-btn::before{content:'';position:absolute;inset:0;border-radius:50%;background:linear-gradient(135deg,rgba(255,255,255,0.08),transparent 60%);opacity:0;transition:opacity 0.3s}
+.social-btn:hover::before{opacity:1}
+.social-btn:hover{transform:translateY(-3px) scale(1.12)}
+.social-btn.facebook:hover{color:#4f9cf9;box-shadow:0 0 18px rgba(79,156,249,0.45);border-color:rgba(79,156,249,0.35);background:rgba(79,156,249,0.1)}
+.social-btn.instagram:hover{color:#e879f9;box-shadow:0 0 18px rgba(232,121,249,0.4);border-color:rgba(232,121,249,0.3);background:rgba(167,139,250,0.1)}
+.social-btn.youtube:hover   {color:#0A66E2;box-shadow:0 0 18px rgba(10, 102, 194, 0.45),0 6px 20px rgba(0, 0, 0, 0.3);border-color: rgba(10, 102, 194, 0.35);background: rgba(10, 102, 194, 0.10);}
+.social-btn.whatsapp:hover{color:#34d399;box-shadow:0 0 18px rgba(52,211,153,0.45);border-color:rgba(52,211,153,0.35);background:rgba(52,211,153,0.1)}
+.social-btn.phone:hover{color:#38bdf8;box-shadow:0 0 18px rgba(56,189,248,0.45);border-color:rgba(56,189,248,0.35);background:rgba(56,189,248,0.1)}
+.social-btn:active{transform:translateY(0) scale(0.96)}
+
+/* ── RESPONSIVE ── */
+@media(max-width:359px){body{padding:10px 8px 28px}.content{max-width:100%}.search-card,.result-card{padding:16px 12px}.vitals-grid{grid-template-columns:1fr 1fr}.orb3{display:none}}
+@media(min-width:360px) and (max-width:479px){.vitals-grid{grid-template-columns:1fr 1fr 1fr}}
+@media(min-width:480px){.vitals-grid{grid-template-columns:repeat(3,1fr)}.content{max-width:500px}}
+@media(min-width:768px){body{padding:32px 24px 48px}.content{max-width:540px}}
+@media(min-width:1024px){body{padding:40px 32px 56px}.content{max-width:560px}}
+@media(min-width:1440px){.content{max-width:600px}}
+@media(max-height:600px) and (orientation:landscape){body{padding-top:12px}.page-header{margin-bottom:14px}.page-icon{width:44px;height:44px;font-size:1.2rem}.page-title{font-size:1.1rem}.page-sub{font-size:0.72rem}.orb3,.ecg-bg{display:none}}
+@media(max-width:540px){.footer-content{flex-direction:column;align-items:center;text-align:center;gap:14px}.footer-brand h3{font-size:1rem}.footer-social{justify-content:center;gap:10px}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:0.01ms!important;transition-duration:0.01ms!important}}
+</style>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+</head>
+<body>
+<h1 style="color:white">RESULT PAGE WORKING</h1>
+<!-- Arabic Notice Bar -->
+<div id="noticeBar" style="display:none">
+  <div class="notice-inner">
+    <span class="notice-icon">ℹ️</span>
+    <span class="notice-text" id="noticeText"></span>
+  </div>
+  <button class="notice-close" onclick="closeNotice()" aria-label="Close">✕</button>
+</div>
+
+<!-- Language Switcher -->
+<div id="langSwitcher">
+  <button class="lang-btn" id="langBtnAr" onclick="setLanguage('ar')">🇪🇬 العربية</button>
+  <button class="lang-btn" id="langBtnEn" onclick="setLanguage('en')">🇺🇸 English</button>
+</div>
+
+<div class="bg-canvas">
+  <div class="orb orb1"></div><div class="orb orb2"></div><div class="orb orb3"></div>
+  <svg class="ecg-bg" viewBox="0 0 1200 44" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+    <polyline fill="none" stroke="#0d9488" stroke-width="1.5" points="0,22 70,22 88,22 100,3 110,41 120,22 138,22 210,22 228,22 240,3 250,41 260,22 278,22 350,22 368,22 380,3 390,41 400,22 418,22 490,22 508,22 520,3 530,41 540,22 558,22 630,22 648,22 660,3 670,41 680,22 698,22 770,22 788,22 800,3 810,41 820,22 838,22 910,22 928,22 940,3 950,41 960,22 978,22 1050,22 1068,22 1080,3 1090,41 1100,22 1118,22 1190,22 1200,22"/>
+    <polyline fill="none" stroke="#0d9488" stroke-width="1.5" points="1200,22 1270,22 1288,22 1300,3 1310,41 1320,22 1338,22 1410,22 1428,22 1440,3 1450,41 1460,22 1478,22 1550,22 1568,22 1580,3 1590,41 1600,22 1618,22 1690,22 1708,22 1720,3 1730,41 1740,22 1758,22 1830,22 1848,22 1860,3 1870,41 1880,22 1898,22 1970,22 1988,22 2000,3 2010,41 2020,22 2038,22 2110,22 2128,22 2140,3 2150,41 2160,22 2178,22 2250,22 2270,22 2280,3 2290,41 2300,22 2320,22 2400,22"/>
+  </svg>
+</div>
+
+<div class="content">
+  <a href="/" class="back-btn" id="backBtn"></a>
+
+  <div class="page-header">
+    <div class="page-icon">🔬</div>
+    <div class="page-title" id="resultPageTitle"></div>
+    <div class="page-sub" id="resultPageSub"></div>
+  </div>
+
+  <div class="search-card">
+    <div class="field">
+      <label id="labelSearchName" for="searchName"></label>
+      <div class="input-wrap">
+        <input id="searchName" type="text" value="" autocomplete="new-password" inputmode="text" autocorrect="off" autocapitalize="off" spellcheck="false">
+        <span class="input-icon">👤</span>
+      </div>
+    </div>
+    <div class="field" style="margin-bottom:0">
+      <label id="labelSearchPhone" for="searchPhone"></label>
+      <div class="input-wrap">
+        <input id="searchPhone" type="tel" value="" placeholder="01XXXXXXXXX" autocomplete="new-password" inputmode="numeric" maxlength="11" pattern="[0-9]*">
+        <span class="input-icon">📱</span>
+      </div>
+    </div>
+    <div class="search-hint" id="searchHint"></div>
+    <button class="btn-search" id="searchBtn" onclick="doSearch()">
+      <span class="btn-text" id="searchBtnText"></span>
+    </button>
+  </div>
+
+  <div class="result-card" id="resultCard">
+    <div class="result-header">
+      <div class="result-avatar" id="resultAvatar">👤</div>
+      <div class="result-title-wrap">
+        <div class="result-patient-name" id="resultName">—</div>
+        <div class="result-datetime" id="resultDateTime">—</div>
+      </div>
+    </div>
+    <div class="health-status-badge" id="healthBadge">
+      <div class="health-dot"></div>
+      <span id="healthText">—</span>
+    </div>
+    <div class="vitals-grid">
+      <div class="vital-card">
+        <div class="vital-icon">❤️</div>
+        <div class="vital-value" id="bpmVal">—</div>
+        <div class="vital-label" id="vitalBpm"></div>
+      </div>
+      <div class="vital-card">
+        <div class="vital-icon">🌡️</div>
+        <div class="vital-value" id="tempVal">—</div>
+        <div class="vital-label" id="vitalTemp"></div>
+      </div>
+      <div class="vital-card">
+        <div class="vital-icon"></div>
+        <div class="vital-value" id="durationVal">—</div>
+        <div class="vital-label" id="vitalDuration"></div>
+      </div>
+    </div>
+    <div class="info-pills" id="infoPills"></div>
+  </div>
+
+  <div class="not-found" id="notFound">
+    <div class="nf-icon">❌</div>
+    <div class="nf-title" id="nfTitle"></div>
+    <div class="nf-sub" id="nfSub"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ══════════════════════════════════════════
+   RESULT PAGE — SELF-CONTAINED i18n SYSTEM
+══════════════════════════════════════════ */
+const translations = {
+  ar: {
+    pageTitle:        "Medical Result — العيادة الذكية",
+    noticeText:       "يفضل استخدام اللغة الإنجليزية للحصول على أفضل تجربة للنظام",
+    backBtn:          "← العودة للتسجيل",
+    resultPageTitle:  "النتائج الطبية",
+    resultPageSub:    "   ",
+    labelSearchName:  "الاسم الكامل",
+    placeholderSName: "أدخل اسمك كما سجلت",
+    labelSearchPhone: "رقم الهاتف",
+    searchHint:       "   ",
+    btnSearch:        " عرض النتيجة",
+    btnSearching:     "جاري البحث...",
+    toastFound:       "✅ تم العثور على نتيجتك",
+    toastNotFound:    "❌ لا توجد نتيجة مطابقة",
+    toastEnterOne:    "⚠️ أدخل الاسم أو رقم الهاتف",
+    toastConnFail:    "❌ فشل الاتصال بالخادم",
+    healthNorm:       "✅ حالة طبيعية",
+    healthHigh:       "⚠️ نبض مرتفع",
+    healthLow:        "💙 نبض منخفض",
+    vitalBpm:         "BPM نبضات/دقيقة",
+    vitalTemp:        "درجة الحرارة",
+    vitalDuration:    "مدة القياس",
+    pillAge:          "سنة",
+    nfTitle:          "لا توجد نتيجة مطابقة",
+    nfSub:            "تأكد من الاسم ورقم الهاتف الذي سجلت به،<br>أو تواصل مع مسؤول العيادة.",
+  },
+  en: {
+    pageTitle:        "Medical Result — Smart Clinic",
+    noticeText:       "يفضل استخدام اللغة الإنجليزية للحصول على أفضل تجربة للنظام",
+    backBtn:          "← Back to Registration",
+    resultPageTitle:  "Medical Result",
+    resultPageSub:    "  ",
+    labelSearchName:  "Full Name",
+    placeholderSName: "Enter your name as registered",
+    labelSearchPhone: "Phone Number",
+    searchHint:       "   ",
+    btnSearch:        " View Medical Result",
+    btnSearching:     "Searching...",
+    toastFound:       "✅ Medical Result found",
+    toastNotFound:    "❌ No matching result found",
+    toastEnterOne:    "⚠️ Enter name or phone number",
+    toastConnFail:    "❌ Failed to connect to server",
+    healthNorm:       "✅ Normal",
+    healthHigh:       "⚠️ High BPM",
+    healthLow:        "💙 Low BPM",
+    vitalBpm:         "BPM Beats/min",
+    vitalTemp:        "Temperature",
+    vitalDuration:    "Duration",
+    pillAge:          "yrs",
+    nfTitle:          "No matching result",
+    nfSub:            "Check the name and phone number you registered with,<br>or contact the clinic administrator.",
+  }
+};
+
+/* ── Language state ── */
+let _lang = localStorage.getItem("sc_lang") || "ar";
+let _noticeClosed = false;
+
+function tr(key) { return (translations[_lang] || translations.ar)[key] || key; }
+
+/* ── Apply translations to DOM ── */
+function applyTranslations() {
+  document.title = tr("pageTitle");
+  const s  = (id, prop, val) => { const el = document.getElementById(id); if (el) el[prop] = val; };
+  const si = (id, val)       => { const el = document.getElementById(id); if (el) el.innerHTML = val; };
+  s("backBtn",         "textContent", tr("backBtn"));
+  s("resultPageTitle", "textContent", tr("resultPageTitle"));
+  s("resultPageSub",   "textContent", tr("resultPageSub"));
+  s("labelSearchName", "textContent", tr("labelSearchName"));
+  s("labelSearchPhone","textContent", tr("labelSearchPhone"));
+  s("searchHint",      "textContent", tr("searchHint"));
+  s("vitalBpm",        "textContent", tr("vitalBpm"));
+  s("vitalTemp",       "textContent", tr("vitalTemp"));
+  s("vitalDuration",   "textContent", tr("vitalDuration"));
+  s("nfTitle",         "textContent", tr("nfTitle"));
+  si("nfSub", tr("nfSub"));
+  const sb = document.getElementById("searchBtn");
+  if (sb && !sb.disabled) document.getElementById("searchBtnText").textContent = tr("btnSearch");
+  const sn = document.getElementById("searchName"); if (sn) sn.placeholder = tr("placeholderSName");
+  updateNoticeBar();
+}
+
+/* ── Notice bar ── */
+function updateNoticeBar() {
+  const nb = document.getElementById("noticeBar");
+  const nt = document.getElementById("noticeText");
+  if (!nb || !nt) return;
+  nt.textContent = tr("noticeText");
+  const show = _lang === "ar" && !_noticeClosed;
+  nb.style.display = show ? "" : "none";
+  document.body.classList.toggle("has-notice", show);
+}
+
+/* ── Switcher highlight ── */
+function updateLangSwitcher() {
+  document.getElementById("langBtnAr").classList.toggle("active", _lang === "ar");
+  document.getElementById("langBtnEn").classList.toggle("active", _lang === "en");
+}
+
+/* ── Set language ── */
+function setLanguage(lang) {
+  _lang = lang;
+  localStorage.setItem("sc_lang", lang);
+  document.documentElement.lang = lang;
+  document.documentElement.dir  = lang === "ar" ? "rtl" : "ltr";
+  updateLangSwitcher();
+  applyTranslations();
+}
+
+/* ── Close notice ── */
+function closeNotice() {
+  _noticeClosed = true;
+  document.getElementById("noticeBar").style.display = "none";
+  document.body.classList.remove("has-notice");
+}
+
+/* ── Initialize ── */
+document.documentElement.lang = _lang;
+document.documentElement.dir  = _lang === "ar" ? "rtl" : "ltr";
+updateLangSwitcher();
+
+/* ══════════════════════════════════════════
+   SEARCH LOGIC
+══════════════════════════════════════════ */
+const BASE_URL = window.location.origin;
+
+function showToast(msg, isError = false) {
+  const t = document.getElementById("toast"); t.textContent = msg;
+  t.className = "toast" + (isError ? " error" : ""); t.classList.add("show");
+  clearTimeout(t._t); t._t = setTimeout(() => t.classList.remove("show"), 3200);
+}
+
+function getHealthClass(bpm, health) {
+  const h = health || (bpm < 60 ? "Low" : bpm > 100 ? "High" : "Norm");
+  if (h === "High") return "high"; if (h === "Low") return "low"; return "norm";
+}
+function getHealthLabel(bpm, health) {
+  const h = health || (bpm < 60 ? "Low" : bpm > 100 ? "High" : "Norm");
+  if (h === "High") return tr("healthHigh"); if (h === "Low") return tr("healthLow"); return tr("healthNorm");
+}
+function getBpmClass(bpm) { if (bpm < 60) return "bpm-low"; if (bpm > 100) return "bpm-high"; return "bpm-norm"; }
+function getAvatar(cls) { if (cls === "high") return "😰"; if (cls === "low") return "💙"; return "💚"; }
+
+async function doSearch() {
+  const nameEl  = document.getElementById("searchName"), phoneEl = document.getElementById("searchPhone");
+  const btn     = document.getElementById("searchBtn"),  btnText = document.getElementById("searchBtnText");
+  const name    = nameEl.value.trim(), phone = phoneEl.value.trim();
+  if (!name && !phone) { showToast(tr("toastEnterOne"), true); nameEl.focus(); return; }
+  document.getElementById("resultCard").className = "result-card";
+  document.getElementById("notFound").className   = "not-found";
+  btn.disabled = true; btnText.innerHTML = `<span class="spinner"></span> ${tr("btnSearching")}`;
+  try {
+    const res  = await fetch(`${BASE_URL}/results`);
+    const data = await res.json();
+    let found = null;
+    if (name && phone) found = data.find(r => r.name?.trim().toLowerCase() === name.toLowerCase() && r.phone?.trim() === phone);
+    if (!found && name)  found = data.find(r => r.name?.trim().toLowerCase() === name.toLowerCase());
+    if (!found && phone) found = data.find(r => r.phone?.trim() === phone);
+    if (found) { showResult(found); showToast(tr("toastFound")); }
+    else       { document.getElementById("notFound").classList.add("show"); showToast(tr("toastNotFound"), true); }
+  } catch { showToast(tr("toastConnFail"), true); }
+  finally { btn.disabled = false; btnText.textContent = tr("btnSearch"); }
+}
+
+function showResult(r) {
+  const bpm = parseFloat(r.bpm) || 0, cls = getHealthClass(bpm, r.health);
+  const card = document.getElementById("resultCard");
+  card.className = "result-card show " + cls;
+  const avatar = document.getElementById("resultAvatar");
+  avatar.className = "result-avatar " + cls; avatar.textContent = getAvatar(cls);
+  document.getElementById("resultName").textContent = r.name || "—";
+  const dt = [r.dateReceived, r.timeReceived].filter(Boolean).join(" · ");
+  document.getElementById("resultDateTime").textContent = dt || "—";
+  const badge = document.getElementById("healthBadge");
+  badge.className = "health-status-badge " + cls;
+  document.getElementById("healthText").textContent = getHealthLabel(bpm, r.health);
+  const bpmEl = document.getElementById("bpmVal");
+  bpmEl.textContent = bpm ? bpm + " BPM" : "—"; bpmEl.className = "vital-value " + getBpmClass(bpm);
+  document.getElementById("tempVal").textContent = r.temp ? r.temp.toFixed(1) + " °C" : "—";
+  document.getElementById("durationVal").textContent = r.duration ? r.duration + "s" : "—";
+  const pills = [];
+  if (r.age)   pills.push(`<div class="pill"><span></span><span>${r.age} ${tr("pillAge")}</span></div>`);
+  if (r.phone) pills.push(`<div class="pill"><span>📱</span><span>${r.phone}</span></div>`);
+  document.getElementById("infoPills").innerHTML = pills.join("");
+}
+
+document.addEventListener("keydown", e => { if (e.key === "Enter") doSearch(); });
+
+window.addEventListener("DOMContentLoaded", () => {
+  const n = document.getElementById("searchName"), p = document.getElementById("searchPhone");
+  if (n) n.value = ""; if (p) p.value = "";
+  setTimeout(() => { if (n) n.value = ""; if (p) p.value = ""; }, 100);
+  applyTranslations();
+});
+</script>
+
+<footer class="smart-footer">
+  <div class="footer-glow"></div>
+  <div class="footer-content">
+    <div class="footer-brand">
+      <h3>Smart Clinic</h3>
+      <p>Designed and developed by <strong>Ezzat Sadek</strong> © 2026</p>
+    </div>
+    <div class="footer-social">
+      <a href="https://www.facebook.com/share/1EQFvntGjL/" class="social-btn facebook" aria-label="Facebook"><i class="fa-brands fa-facebook-f"></i></a>
+      <a href="https://www.instagram.com/zahran_0x?igsh=dmZjYWFjeTdvc3Nm" class="social-btn instagram" aria-label="Instagram"><i class="fa-brands fa-instagram"></i></a>
+      <a href="https://www.linkedin.com/in/ezzatsadek" class="social-btn youtube" aria-label="YouTube"><i class="fa-brands fa-linkedin"></i></a>
+      <a href="https://wa.me/qr/36JSTVAMJZ3LB1" class="social-btn whatsapp" aria-label="WhatsApp"><i class="fa-brands fa-whatsapp"></i></a>
+      
+    </div>
+  </div>
+</footer>
+</body>
+</html>

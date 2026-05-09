@@ -288,7 +288,7 @@ input:focus+.input-icon{opacity:1}
         <div class="vital-label" id="vitalTemp"></div>
       </div>
       <div class="vital-card">
-        <div class="vital-icon">⏱️</div>
+        <div class="vital-icon"></div>
         <div class="vital-value" id="durationVal">—</div>
         <div class="vital-label" id="vitalDuration"></div>
       </div>
@@ -491,7 +491,7 @@ function showResult(r) {
   document.getElementById("tempVal").textContent = r.temp ? r.temp.toFixed(1) + " °C" : "—";
   document.getElementById("durationVal").textContent = r.duration ? r.duration + "s" : "—";
   const pills = [];
-  if (r.age)   pills.push(`<div class="pill"><span>🎂</span><span>${r.age} ${tr("pillAge")}</span></div>`);
+  if (r.age)   pills.push(`<div class="pill"><span></span><span>${r.age} ${tr("pillAge")}</span></div>`);
   if (r.phone) pills.push(`<div class="pill"><span>📱</span><span>${r.phone}</span></div>`);
   document.getElementById("infoPills").innerHTML = pills.join("");
 }

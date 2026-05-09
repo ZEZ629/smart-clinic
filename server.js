@@ -312,7 +312,9 @@ app.delete("/admin/result/:idx", authMiddleware, (req, res) => {
 app.get("/results", (req, res) => {
   res.json(results);
 });
-
+app.get("/test", (req, res) => {
+  res.send("SERVER UPDATED");
+});
 app.use((req, res) =>
   res.status(404).json({ error: "Not found" })
 );

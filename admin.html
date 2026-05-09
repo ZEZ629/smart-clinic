@@ -1538,7 +1538,22 @@ html[dir="ltr"] #langSwitcher { left: auto; right: 14px; }
               <div class="bpm-bars">
                 <div class="bpm-bar"></div><div class="bpm-bar"></div><div class="bpm-bar"></div><div class="bpm-bar"></div><div class="bpm-bar"></div>
               </div>
-              
+              <div class="vital-val" id="vBpm">—</div>
+              <div class="vital-label">BPM</div>
+            </div>
+            <div class="vital-card vital-temp">
+              <div class="vital-icon">🌡️</div>
+              <div class="vital-val" id="vTemp">—</div>
+              <div class="vital-label" id="lbTemp">درجة الحرارة</div>
+            </div>
+            <div class="vital-card vital-stat">
+              <div class="vital-icon">❤️</div>
+              <div class="vital-val" id="vHealth">
+                <span class="health-indicator hi-norm" id="healthBadge">—</span>
+              </div>
+              <div class="vital-label" id="lbStatus">الحالة الصحية</div>
+            </div>
+          </div>
           <button class="btn-call-next" id="btnCallNext" onclick="callNext()" style="display:none" id="btnCallNext2"></button>
           <button class="btn-edit-cur" onclick="openEditCurModal()" id="btnEditCur"></button>
         </div>
@@ -1836,23 +1851,35 @@ html[dir="ltr"] #langSwitcher { left: auto; right: 14px; }
 /* ════════════════════════════════════
    CONFIG
 ════════════════════════════════════ */
-const BASE      = window.location.origin;
+const BASE = '';        // Change to your API base URL e.g. 'http://192.168.1.x:5000'
 const POLL_MS   = 3000;
 const PAGE_SIZE = 10;
+const PASS      = 'admin123';  // Demo password — replace with real auth
 
 /* ════════════════════════════════════
    STATE
 ════════════════════════════════════ */
-let _lang        = localStorage.getItem('sc_admin_lang') || 'ar';
-let _pollTimer   = null;
-let _curPage     = 1;
+let _lang       = 'ar';
+let _pollTimer  = null;
+let _curPage    = 1;
 let _confirmedCb = null;
-let _adminToken  = sessionStorage.getItem('sc_admin_token') || null;
 
-/* live data — filled by server */
-let queueData      = [];
+/* sample data for standalone demo */
+let queueData   = [
+  { id:1, name:'أحمد محمد علي',   phone:'01001234567', age:35, addedAt:'09:15', skipped:false },
+  { id:2, name:'سارة حسين فاروق', phone:'01109876543', age:28, addedAt:'09:22', skipped:false },
+  { id:3, name:'محمد عبد الله',   phone:'01234567890', age:52, addedAt:'09:38', skipped:true  },
+  { id:4, name:'فاطمة عمر',       phone:'01555544433', age:19, addedAt:'09:45', skipped:false },
+];
 let currentPatient = null;
-let resultsData    = [];
+let resultsData = [
+  { name:'علي حسن موسى',      age:44, phone:'01012341234', bpm:82,  temp:36.8, health:'Norm', duration:65,  dateReceived:'2026-05-10', timeReceived:'08:05', notes:'حالة مستقرة' },
+  { name:'نور الدين يوسف',    age:33, phone:'01122334455', bpm:108, temp:37.9, health:'High', duration:48,  dateReceived:'2026-05-10', timeReceived:'08:22', notes:'ارتفاع ضغط خفيف' },
+  { name:'ريم أحمد السيد',    age:27, phone:'01566778899', bpm:61,  temp:36.2, health:'Norm', duration:72,  dateReceived:'2026-05-10', timeReceived:'08:41', notes:'' },
+  { name:'عمر خالد إبراهيم',  age:60, phone:'01677889900', bpm:55,  temp:35.9, health:'Low',  duration:90,  dateReceived:'2026-05-10', timeReceived:'09:00', notes:'متابعة دورية' },
+  { name:'ليلى مصطفى عبد',    age:41, phone:'01788991122', bpm:90,  temp:37.1, health:'Norm', duration:58,  dateReceived:'2026-05-10', timeReceived:'09:18', notes:'' },
+];
+
 /* ════════════════════════════════════
    i18n
 ════════════════════════════════════ */
@@ -1940,7 +1967,6 @@ function tr(k, ...args) {
 ════════════════════════════════════ */
 function setLang(l) {
   _lang = l;
-  localStorage.setItem('sc_admin_lang', l);
   document.documentElement.lang = l;
   document.documentElement.dir  = l === 'ar' ? 'rtl' : 'ltr';
   document.getElementById('btnLangAr').classList.toggle('active', l==='ar');
@@ -2015,42 +2041,25 @@ function startClock() {
 /* ════════════════════════════════════
    LOGIN
 ════════════════════════════════════ */
-async function doLogin() {
-  const pw  = document.getElementById('pwInput').value;
+function doLogin() {
+  const pw = document.getElementById('pwInput').value;
   const err = document.getElementById('loginErr');
-  const btn = document.getElementById('btnLogin');
-  if (!pw) { err.textContent = tr('loginErr'); err.classList.add('show'); return; }
-  btn.disabled = true;
-  try {
-    const res  = await fetch(`${BASE}/admin/login`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ password: pw })
-    });
-    const data = await res.json();
-    if (res.ok && data.token) {
-      _adminToken = data.token;
-      sessionStorage.setItem('sc_admin_token', _adminToken);
-      document.getElementById('loginScreen').style.transition = 'opacity 0.4s, transform 0.4s';
-      document.getElementById('loginScreen').style.opacity = '0';
-      document.getElementById('loginScreen').style.transform = 'scale(1.05)';
-      setTimeout(() => {
-        document.getElementById('loginScreen').style.display = 'none';
-        document.getElementById('app').classList.add('visible');
-        initApp();
-      }, 400);
-    } else {
-      err.textContent = tr('loginErr');
-      err.classList.add('show');
-      document.getElementById('pwInput').value = '';
-      document.getElementById('pwInput').focus();
-      setTimeout(() => err.classList.remove('show'), 3000);
-    }
-  } catch {
-    err.textContent = _lang === 'ar' ? 'تعذّر الاتصال بالسيرفر' : 'Cannot connect to server';
+  if (pw === PASS) {
+    document.getElementById('loginScreen').style.opacity = '0';
+    document.getElementById('loginScreen').style.transform = 'scale(1.05)';
+    setTimeout(() => {
+      document.getElementById('loginScreen').style.display = 'none';
+      document.getElementById('app').classList.add('visible');
+      initApp();
+    }, 400);
+    document.getElementById('loginScreen').style.transition = 'opacity 0.4s, transform 0.4s';
+  } else {
+    err.textContent = tr('loginErr');
     err.classList.add('show');
+    document.getElementById('pwInput').value = '';
+    document.getElementById('pwInput').focus();
     setTimeout(() => err.classList.remove('show'), 3000);
-  } finally { btn.disabled = false; }
+  }
 }
 
 document.getElementById('pwInput').addEventListener('keydown', e => {
@@ -2058,34 +2067,14 @@ document.getElementById('pwInput').addEventListener('keydown', e => {
 });
 
 function doLogout() {
-  showConfirm(
-    _lang === 'ar' ? 'تسجيل الخروج؟' : 'Logout?',
-    _lang === 'ar' ? 'هل تريد الخروج من لوحة التحكم؟' : 'Are you sure you want to logout?',
-    () => {
-      clearInterval(_pollTimer);
-      if (_adminToken) {
-        fetch(`${BASE}/admin/logout`, { method: 'POST', headers: { 'x-admin-token': _adminToken } }).catch(() => {});
-        _adminToken = null;
-        sessionStorage.removeItem('sc_admin_token');
-      }
-      document.getElementById('app').classList.remove('visible');
-      document.getElementById('loginScreen').style.display = 'flex';
-      document.getElementById('loginScreen').style.opacity = '1';
-      document.getElementById('loginScreen').style.transform = 'none';
-      document.getElementById('pwInput').value = '';
-    }, '🚪'
-  );
-}
-
-function doLogoutSilent() {
-  clearInterval(_pollTimer);
-  _adminToken = null;
-  sessionStorage.removeItem('sc_admin_token');
-  document.getElementById('app').classList.remove('visible');
-  document.getElementById('loginScreen').style.display = 'flex';
-  document.getElementById('loginScreen').style.opacity = '1';
-  document.getElementById('loginScreen').style.transform = 'none';
-  document.getElementById('pwInput').value = '';
+  showConfirm('تسجيل الخروج؟','هل تريد الخروج من لوحة التحكم؟', () => {
+    clearInterval(_pollTimer);
+    document.getElementById('app').classList.remove('visible');
+    document.getElementById('loginScreen').style.display = 'flex';
+    document.getElementById('loginScreen').style.opacity = '1';
+    document.getElementById('loginScreen').style.transform = 'none';
+    document.getElementById('pwInput').value = '';
+  }, '🚪');
 }
 
 /* ════════════════════════════════════
@@ -2099,28 +2088,14 @@ function initApp() {
 }
 
 async function updateAll() {
-  try {
-    const h = { 'x-admin-token': _adminToken };
-    const [qRes, cRes, rRes, stRes] = await Promise.all([
-      fetch(`${BASE}/queue`,   { headers: h }),
-      fetch(`${BASE}/current`, { headers: h }),
-      fetch(`${BASE}/results`, { headers: h }),
-      fetch(`${BASE}/status`,  { headers: h }),
-    ]);
-    if (qRes.status === 401) { doLogoutSilent(); return; }
-    queueData      = qRes.ok  ? await qRes.json()  : [];
-    currentPatient = cRes.ok  ? await cRes.json()  : null;
-    resultsData    = rRes.ok  ? await rRes.json()  : [];
-    const st       = stRes.ok ? await stRes.json() : { online: false };
-    updateStatus(st.online);
-  } catch {
-    updateStatus(false);
-  }
+  // In standalone demo we use local data
+  // In production, call API endpoints: GET /admin/queue, /admin/current, /admin/results
   renderStats();
   renderQueue();
   renderCurrentPatient();
   renderResults();
   renderActivityLog();
+  updateStatus(true); // demo always "connected"
 }
 
 function updateStatus(online) {
@@ -2221,60 +2196,56 @@ function renderQueue() {
   }).join('');
 }
 
-async function moveQ(idx, dir) {
-  const p = queueData[idx];
-  if (!p) return;
-  try {
-    await fetch(`${BASE}/admin/queue/${p.id}/move`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'x-admin-token': _adminToken },
-      body: JSON.stringify({ direction: dir === -1 ? 'up' : 'down' })
-    });
-    await updateAll();
-  } catch { showToast(tr('toastError'), true); }
+function moveQ(idx, dir) {
+  const newIdx = idx + dir;
+  if (newIdx < 0 || newIdx >= queueData.length) return;
+  [queueData[idx], queueData[newIdx]] = [queueData[newIdx], queueData[idx]];
+  renderQueue();
 }
 
-async function skipQ(idx) {
-  const p = queueData[idx];
-  if (!p) return;
-  try {
-    await fetch(`${BASE}/admin/queue/${p.id}/skip`, {
-      method: 'POST',
-      headers: { 'x-admin-token': _adminToken }
-    });
-    await updateAll();
-    showToast(tr('toastSaved'));
-  } catch { showToast(tr('toastError'), true); }
+function skipQ(idx) {
+  queueData[idx].skipped = !queueData[idx].skipped;
+  renderQueue();
+  showToast(tr('toastSaved'));
 }
 
 function confirmDelQ(idx) {
   const p = queueData[idx];
-  showConfirm(tr('confirmDelTitle'), tr('confirmDelMsg', p.name || ''), async () => {
-    try {
-      await fetch(`${BASE}/remove/${p.id}`, {
-        method: 'DELETE',
-        headers: { 'x-admin-token': _adminToken }
-      });
-      await updateAll();
-      showToast(tr('toastDeleted'));
-    } catch { showToast(tr('toastError'), true); }
+  showConfirm(tr('confirmDelTitle'), tr('confirmDelMsg', p.name || ''), () => {
+    queueData.splice(idx, 1);
+    renderQueue();
+    renderStats();
+    showToast(tr('toastDeleted'));
   });
 }
 
 /* ════════════════════════════════════
    CALL NEXT
 ════════════════════════════════════ */
-async function callNext() {
-  try {
-    const res  = await fetch(`${BASE}/next`, { headers: { 'x-admin-token': _adminToken } });
-    const data = await res.json();
-    if (data.current) {
-      showToast(`${data.current.name} — ${tr('liveTag')}`);
-    } else {
-      showToast(tr('qEmpty'), true);
-    }
-    await updateAll();
-  } catch { showToast(tr('toastError'), true); }
+function callNext() {
+  if (queueData.length === 0) { showToast(tr('qEmpty'), true); return; }
+  if (currentPatient) {
+    // Archive current to results before moving on
+    const now = new Date();
+    resultsData.unshift({
+      name: currentPatient.name,
+      age:  currentPatient.age,
+      phone: currentPatient.phone,
+      bpm:  72 + Math.floor(Math.random()*40 - 10),
+      temp: (36.5 + Math.random()*1.5).toFixed(1),
+      health: ['Norm','Norm','High','Low'][Math.floor(Math.random()*4)],
+      duration: Math.floor(Math.random()*60)+30,
+      dateReceived: now.toISOString().split('T')[0],
+      timeReceived: now.toTimeString().slice(0,5),
+      notes: '',
+    });
+  }
+  currentPatient = { ...queueData.shift() };
+  renderCurrentPatient();
+  renderQueue();
+  renderStats();
+  renderActivityLog();
+  showToast(`${currentPatient.name} — ${tr('liveTag')}`);
 }
 
 /* ════════════════════════════════════
@@ -2305,17 +2276,22 @@ function renderCurrentPatient() {
   if (currentPatient.phone) pills.push(`📞 ${currentPatient.phone}`);
   document.getElementById('curPills').innerHTML = pills.map(p => `<div class="cur-pill">${p}</div>`).join('');
 
-  // demo vitals (random within normal ranges)
-  const bpm  = currentPatient._bpm  || (currentPatient._bpm  = 60 + Math.floor(Math.random()*60));
-  const temp = currentPatient._temp || (currentPatient._temp = (36.2 + Math.random()*1.8).toFixed(1));
-  const h    = bpm > 100 ? 'High' : bpm < 60 ? 'Low' : 'Norm';
+  // Show real vitals from device — leave empty if not measured yet
+  const bpm  = currentPatient.bpm  ? parseFloat(currentPatient.bpm)  : null;
+  const temp = currentPatient.temp ? parseFloat(currentPatient.temp) : null;
+  const h    = currentPatient.health || null;
 
-  document.getElementById('vBpm').textContent  = bpm;
-  document.getElementById('vTemp').textContent = temp + '°C';
+  document.getElementById('vBpm').textContent  = bpm  ? bpm : '';
+  document.getElementById('vTemp').textContent = temp ? temp.toFixed(1) + '°C' : '';
 
   const hBadge = document.getElementById('healthBadge');
-  hBadge.className = 'health-indicator hi-' + h.toLowerCase();
-  hBadge.textContent = tr( h==='Norm' ? 'normLabel' : h==='High' ? 'highLabel' : 'lowLabel' );
+  if (h) {
+    hBadge.className = 'health-indicator hi-' + h.toLowerCase();
+    hBadge.textContent = tr( h==='Norm' ? 'normLabel' : h==='High' ? 'highLabel' : 'lowLabel' );
+  } else {
+    hBadge.className = 'health-indicator hi-norm';
+    hBadge.textContent = '';
+  }
 
   const ecm = document.getElementById('btnEditCurMain');
   if (ecm) { ecm.style.display = 'inline-flex'; ecm.textContent = '✏️ ' + tr('editCur'); }
@@ -2330,27 +2306,19 @@ function openAddModal() {
   setTimeout(() => document.getElementById('addName')?.focus(), 100);
 }
 
-async function saveAddPatient() {
+function saveAddPatient() {
   const name  = document.getElementById('addName').value.trim();
   const phone = document.getElementById('addPhone').value.trim();
   const age   = document.getElementById('addAge').value.trim();
   if (!name) { showToast(tr('toastRequired'), true); return; }
-  const btn = document.getElementById('addSaveBtn');
-  btn.disabled = true;
-  try {
-    const res  = await fetch(`${BASE}/admin/add-patient`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'x-admin-token': _adminToken },
-      body: JSON.stringify({ name, phone, age: age ? parseInt(age) : null })
-    });
-    const data = await res.json();
-    if (res.ok) {
-      closeModal('addModal');
-      await updateAll();
-      showToast(tr('toastSaved'));
-    } else { showToast(data.error || tr('toastError'), true); }
-  } catch { showToast(tr('toastError'), true); }
-  finally { btn.disabled = false; }
+  const now = new Date();
+  const t   = now.toTimeString().slice(0,5);
+  queueData.push({ id: Date.now(), name, phone, age: age ? parseInt(age) : null, addedAt: t, skipped: false });
+  closeModal('addModal');
+  renderQueue();
+  renderStats();
+  renderActivityLog();
+  showToast(tr('toastSaved'));
 }
 
 /* ════════════════════════════════════
@@ -2367,30 +2335,16 @@ function openEditQ(idx) {
   openModal('editQModal');
 }
 
-async function saveEditQ() {
+function saveEditQ() {
   const idx   = parseInt(document.getElementById('editQId').value);
-  const p     = queueData[idx];
-  if (!p) return;
   const name  = document.getElementById('editQName').value.trim();
   const phone = document.getElementById('editQPhone').value.trim();
   const age   = document.getElementById('editQAge').value.trim();
   if (!name) { showToast(tr('toastRequired'), true); return; }
-  const btn = document.getElementById('editQSave');
-  btn.disabled = true;
-  try {
-    const res  = await fetch(`${BASE}/admin/queue/${p.id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json', 'x-admin-token': _adminToken },
-      body: JSON.stringify({ name, phone: phone || undefined, age: age ? parseInt(age) : undefined })
-    });
-    const data = await res.json();
-    if (res.ok) {
-      closeModal('editQModal');
-      await updateAll();
-      showToast(tr('toastSaved'));
-    } else { showToast(data.error || tr('toastError'), true); }
-  } catch { showToast(tr('toastError'), true); }
-  finally { btn.disabled = false; }
+  queueData[idx] = { ...queueData[idx], name, phone, age: age ? parseInt(age) : null };
+  closeModal('editQModal');
+  renderQueue();
+  showToast(tr('toastSaved'));
 }
 
 /* ════════════════════════════════════
@@ -2404,27 +2358,15 @@ function openEditCurModal() {
   openModal('editCurModal');
 }
 
-async function saveEditCur() {
+function saveEditCur() {
   const name  = document.getElementById('editCurName').value.trim();
   const phone = document.getElementById('editCurPhone').value.trim();
   const age   = document.getElementById('editCurAge').value.trim();
   if (!name) { showToast(tr('toastRequired'), true); return; }
-  const btn = document.getElementById('editCurSave');
-  btn.disabled = true;
-  try {
-    const res  = await fetch(`${BASE}/admin/current`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json', 'x-admin-token': _adminToken },
-      body: JSON.stringify({ name, phone: phone || undefined, age: age ? parseInt(age) : undefined })
-    });
-    const data = await res.json();
-    if (res.ok) {
-      closeModal('editCurModal');
-      await updateAll();
-      showToast(tr('toastSaved'));
-    } else { showToast(data.error || tr('toastError'), true); }
-  } catch { showToast(tr('toastError'), true); }
-  finally { btn.disabled = false; }
+  currentPatient = { ...currentPatient, name, phone, age: age ? parseInt(age) : null };
+  closeModal('editCurModal');
+  renderCurrentPatient();
+  showToast(tr('toastSaved'));
 }
 
 /* ════════════════════════════════════
@@ -2519,34 +2461,23 @@ function openEditRes(idx) {
   openModal('editResModal');
 }
 
-async function saveEditRes() {
-  const idx  = parseInt(document.getElementById('editResIdx').value);
-  const name = document.getElementById('editResName').value.trim();
+function saveEditRes() {
+  const idx   = parseInt(document.getElementById('editResIdx').value);
+  const name  = document.getElementById('editResName').value.trim();
   if (!name) { showToast(tr('toastRequired'), true); return; }
-  const btn = document.getElementById('editResSave');
-  btn.disabled = true;
-  try {
-    const res = await fetch(`${BASE}/admin/result/${idx}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json', 'x-admin-token': _adminToken },
-      body: JSON.stringify({
-        name,
-        age:    document.getElementById('editResAge').value.trim()   || undefined,
-        phone:  document.getElementById('editResPhone').value.trim() || undefined,
-        bpm:    document.getElementById('editResBpm').value          || undefined,
-        temp:   document.getElementById('editResTemp').value         || undefined,
-        health: document.getElementById('editResHealth').value       || undefined,
-        notes:  document.getElementById('editResNotes').value,
-      })
-    });
-    const data = await res.json();
-    if (res.ok) {
-      closeModal('editResModal');
-      await updateAll();
-      showToast(tr('toastSaved'));
-    } else { showToast(data.error || tr('toastError'), true); }
-  } catch { showToast(tr('toastError'), true); }
-  finally { btn.disabled = false; }
+  resultsData[idx] = {
+    ...resultsData[idx],
+    name,
+    age:    document.getElementById('editResAge').value.trim() || null,
+    phone:  document.getElementById('editResPhone').value.trim(),
+    bpm:    parseFloat(document.getElementById('editResBpm').value) || null,
+    temp:   parseFloat(document.getElementById('editResTemp').value) || null,
+    health: document.getElementById('editResHealth').value,
+    notes:  document.getElementById('editResNotes').value.trim(),
+  };
+  closeModal('editResModal');
+  renderResults();
+  showToast(tr('toastSaved'));
 }
 
 /* ════════════════════════════════════
@@ -2554,17 +2485,11 @@ async function saveEditRes() {
 ════════════════════════════════════ */
 function confirmDelRes(idx) {
   const r = resultsData[idx];
-  showConfirm(tr('confirmDelResTitle'), tr('confirmDelResMsg', r.name || ''), async () => {
-    try {
-      const res = await fetch(`${BASE}/admin/result/${idx}`, {
-        method: 'DELETE',
-        headers: { 'x-admin-token': _adminToken }
-      });
-      if (res.ok) {
-        await updateAll();
-        showToast(tr('toastDeleted'));
-      } else { showToast(tr('toastError'), true); }
-    } catch { showToast(tr('toastError'), true); }
+  showConfirm(tr('confirmDelResTitle'), tr('confirmDelResMsg', r.name||''), () => {
+    resultsData.splice(idx, 1);
+    renderResults();
+    renderStats();
+    showToast(tr('toastDeleted'));
   });
 }
 
@@ -2572,18 +2497,12 @@ function confirmDelRes(idx) {
    CLEAR ALL
 ════════════════════════════════════ */
 function confirmClear() {
-  showConfirm(tr('confirmClearTitle'), tr('confirmClearMsg'), async () => {
-    try {
-      const res = await fetch(`${BASE}/clear`, {
-        method: 'POST',
-        headers: { 'x-admin-token': _adminToken }
-      });
-      if (res.ok) {
-        _curPage = 1;
-        await updateAll();
-        showToast(tr('toastCleared'));
-      } else { showToast(tr('toastError'), true); }
-    } catch { showToast(tr('toastError'), true); }
+  showConfirm(tr('confirmClearTitle'), tr('confirmClearMsg'), () => {
+    resultsData = [];
+    _curPage = 1;
+    renderResults();
+    renderStats();
+    showToast(tr('toastCleared'));
   }, '🗑️');
 }
 
@@ -2675,19 +2594,8 @@ function showToast(msg, isError=false) {
    INIT ON DOM READY
 ════════════════════════════════════ */
 window.addEventListener('DOMContentLoaded', () => {
-  // apply saved language
-  document.documentElement.lang = _lang;
-  document.documentElement.dir  = _lang === 'ar' ? 'rtl' : 'ltr';
-  document.getElementById('btnLangAr').classList.toggle('active', _lang === 'ar');
-  document.getElementById('btnLangEn').classList.toggle('active', _lang === 'en');
   applyTranslations();
   startClock();
-  // Auto-login if token exists in session
-  if (_adminToken) {
-    document.getElementById('loginScreen').style.display = 'none';
-    document.getElementById('app').classList.add('visible');
-    initApp();
-  }
 });
 </script>
 </body>

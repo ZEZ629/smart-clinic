@@ -21,7 +21,7 @@ const limiter = rateLimit({
   }
 });
 
-app.use(limiter);
+// app.use(limiter);
 
 app.disable("x-powered-by");
 if (compression) app.use(compression());

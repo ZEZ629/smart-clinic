@@ -83,6 +83,9 @@ function detectHealth(bpm) {
 // ── PAGES ───────────────────────────────────────────────────────────────────
 app.get("/",       (req, res) => res.sendFile(path.join(__dirname, "index.html")));
 app.get("/result", (req, res) => res.sendFile(path.join(__dirname, "result.html")));
+app.get("/result-test", (req, res) => {
+  res.send("RESULT ROUTE WORKING");
+});
 app.get("/admin",  (req, res) => res.sendFile(path.join(__dirname, "admin.html")));
 app.get("/api",    (req, res) => res.json({ status: "Smart Clinic API v4.0" }));
 

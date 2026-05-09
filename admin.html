@@ -1851,10 +1851,22 @@ html[dir="ltr"] #langSwitcher { left: auto; right: 14px; }
 /* ════════════════════════════════════
    CONFIG
 ════════════════════════════════════ */
-const BASE = '';        // Change to your API base URL e.g. 'http://192.168.1.x:5000'
+const BASE      = '';   // same origin — change to 'http://IP:3000' if remote
 const POLL_MS   = 3000;
 const PAGE_SIZE = 10;
-const PASS      = 'admin123';  // Demo password — replace with real auth
+
+/* ════════════════════════════════════
+   AUTH STATE
+════════════════════════════════════ */
+let _adminToken = sessionStorage.getItem('adminToken') || null;
+
+/* Helper: fetch with admin token */
+async function api(path, opts = {}) {
+  const headers = { 'Content-Type': 'application/json', ...(opts.headers || {}) };
+  if (_adminToken) headers['x-admin-token'] = _adminToken;
+  const res = await fetch(BASE + path, { ...opts, headers });
+  return res;
+}
 
 /* ════════════════════════════════════
    STATE
@@ -1864,21 +1876,9 @@ let _pollTimer  = null;
 let _curPage    = 1;
 let _confirmedCb = null;
 
-/* sample data for standalone demo */
-let queueData   = [
-  { id:1, name:'أحمد محمد علي',   phone:'01001234567', age:35, addedAt:'09:15', skipped:false },
-  { id:2, name:'سارة حسين فاروق', phone:'01109876543', age:28, addedAt:'09:22', skipped:false },
-  { id:3, name:'محمد عبد الله',   phone:'01234567890', age:52, addedAt:'09:38', skipped:true  },
-  { id:4, name:'فاطمة عمر',       phone:'01555544433', age:19, addedAt:'09:45', skipped:false },
-];
+let queueData      = [];
 let currentPatient = null;
-let resultsData = [
-  { name:'علي حسن موسى',      age:44, phone:'01012341234', bpm:82,  temp:36.8, health:'Norm', duration:65,  dateReceived:'2026-05-10', timeReceived:'08:05', notes:'حالة مستقرة' },
-  { name:'نور الدين يوسف',    age:33, phone:'01122334455', bpm:108, temp:37.9, health:'High', duration:48,  dateReceived:'2026-05-10', timeReceived:'08:22', notes:'ارتفاع ضغط خفيف' },
-  { name:'ريم أحمد السيد',    age:27, phone:'01566778899', bpm:61,  temp:36.2, health:'Norm', duration:72,  dateReceived:'2026-05-10', timeReceived:'08:41', notes:'' },
-  { name:'عمر خالد إبراهيم',  age:60, phone:'01677889900', bpm:55,  temp:35.9, health:'Low',  duration:90,  dateReceived:'2026-05-10', timeReceived:'09:00', notes:'متابعة دورية' },
-  { name:'ليلى مصطفى عبد',    age:41, phone:'01788991122', bpm:90,  temp:37.1, health:'Norm', duration:58,  dateReceived:'2026-05-10', timeReceived:'09:18', notes:'' },
-];
+let resultsData    = [];
 
 /* ════════════════════════════════════
    i18n
@@ -2041,24 +2041,40 @@ function startClock() {
 /* ════════════════════════════════════
    LOGIN
 ════════════════════════════════════ */
-function doLogin() {
-  const pw = document.getElementById('pwInput').value;
+async function doLogin() {
+  const pw  = document.getElementById('pwInput').value;
   const err = document.getElementById('loginErr');
-  if (pw === PASS) {
-    document.getElementById('loginScreen').style.opacity = '0';
-    document.getElementById('loginScreen').style.transform = 'scale(1.05)';
-    setTimeout(() => {
-      document.getElementById('loginScreen').style.display = 'none';
-      document.getElementById('app').classList.add('visible');
-      initApp();
-    }, 400);
-    document.getElementById('loginScreen').style.transition = 'opacity 0.4s, transform 0.4s';
-  } else {
-    err.textContent = tr('loginErr');
-    err.classList.add('show');
-    document.getElementById('pwInput').value = '';
-    document.getElementById('pwInput').focus();
-    setTimeout(() => err.classList.remove('show'), 3000);
+  const btn = document.getElementById('btnLogin');
+  if (btn) { btn.disabled = true; btn.textContent = '...'; }
+  try {
+    const res  = await fetch(BASE + '/admin/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password: pw }),
+    });
+    const data = await res.json();
+    if (res.ok && data.token) {
+      _adminToken = data.token;
+      sessionStorage.setItem('adminToken', _adminToken);
+      document.getElementById('loginScreen').style.opacity = '0';
+      document.getElementById('loginScreen').style.transform = 'scale(1.05)';
+      setTimeout(() => {
+        document.getElementById('loginScreen').style.display = 'none';
+        document.getElementById('app').classList.add('visible');
+        initApp();
+      }, 400);
+      document.getElementById('loginScreen').style.transition = 'opacity 0.4s, transform 0.4s';
+    } else {
+      if (err) { err.textContent = tr('loginErr'); err.classList.add('show'); }
+      document.getElementById('pwInput').value = '';
+      document.getElementById('pwInput').focus();
+      setTimeout(() => err?.classList.remove('show'), 3000);
+    }
+  } catch (e) {
+    if (err) { err.textContent = 'خطأ في الاتصال بالسيرفر'; err.classList.add('show'); }
+    setTimeout(() => err?.classList.remove('show'), 3000);
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = tr('loginBtn'); }
   }
 }
 
@@ -2067,8 +2083,11 @@ document.getElementById('pwInput').addEventListener('keydown', e => {
 });
 
 function doLogout() {
-  showConfirm('تسجيل الخروج؟','هل تريد الخروج من لوحة التحكم؟', () => {
+  showConfirm('تسجيل الخروج؟','هل تريد الخروج من لوحة التحكم؟', async () => {
     clearInterval(_pollTimer);
+    try { await api('/admin/logout', { method: 'POST' }); } catch {}
+    _adminToken = null;
+    sessionStorage.removeItem('adminToken');
     document.getElementById('app').classList.remove('visible');
     document.getElementById('loginScreen').style.display = 'flex';
     document.getElementById('loginScreen').style.opacity = '1';
@@ -2087,15 +2106,51 @@ function initApp() {
   _pollTimer = setInterval(updateAll, POLL_MS);
 }
 
+/* Auto-restore session on page load */
+function tryRestoreSession() {
+  if (_adminToken) {
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('app').classList.add('visible');
+    initApp();
+  }
+}
+
 async function updateAll() {
-  // In standalone demo we use local data
-  // In production, call API endpoints: GET /admin/queue, /admin/current, /admin/results
+  try {
+    const [qRes, curRes, resRes, stRes] = await Promise.all([
+      api('/queue'),
+      api('/current'),
+      api('/results'),
+      api('/status'),
+    ]);
+
+    if (qRes.status === 401) {
+      // Token expired — force re-login
+      clearInterval(_pollTimer);
+      _adminToken = null;
+      sessionStorage.removeItem('adminToken');
+      document.getElementById('app').classList.remove('visible');
+      document.getElementById('loginScreen').style.display = 'flex';
+      document.getElementById('loginScreen').style.opacity = '1';
+      document.getElementById('loginScreen').style.transform = 'none';
+      return;
+    }
+
+    queueData      = qRes.ok      ? await qRes.json()   : queueData;
+    currentPatient = curRes.ok    ? await curRes.json()  : currentPatient;
+    resultsData    = resRes.ok    ? await resRes.json()  : resultsData;
+    const status   = stRes.ok     ? await stRes.json()   : { online: false };
+
+    updateStatus(status.online);
+  } catch (e) {
+    updateStatus(false);
+  }
+
   renderStats();
   renderQueue();
   renderCurrentPatient();
   renderResults();
   renderActivityLog();
-  updateStatus(true); // demo always "connected"
 }
 
 function updateStatus(online) {
@@ -2196,56 +2251,62 @@ function renderQueue() {
   }).join('');
 }
 
-function moveQ(idx, dir) {
-  const newIdx = idx + dir;
-  if (newIdx < 0 || newIdx >= queueData.length) return;
-  [queueData[idx], queueData[newIdx]] = [queueData[newIdx], queueData[idx]];
-  renderQueue();
+async function moveQ(idx, dir) {
+  const p = queueData[idx];
+  if (!p) return;
+  const direction = dir === -1 ? 'up' : 'down';
+  try {
+    const res = await api(`/admin/queue/${p.id}/move`, {
+      method: 'POST',
+      body: JSON.stringify({ direction }),
+    });
+    if (res.ok) { const d = await res.json(); queueData = d.queue; renderQueue(); renderStats(); }
+    else showToast(tr('toastError'), true);
+  } catch { showToast(tr('toastError'), true); }
 }
 
-function skipQ(idx) {
-  queueData[idx].skipped = !queueData[idx].skipped;
-  renderQueue();
-  showToast(tr('toastSaved'));
+async function skipQ(idx) {
+  const p = queueData[idx];
+  if (!p) return;
+  try {
+    const res = await api(`/admin/queue/${p.id}/skip`, { method: 'POST' });
+    if (res.ok) { const d = await res.json(); queueData = d.queue; renderQueue(); showToast(tr('toastSaved')); }
+    else showToast(tr('toastError'), true);
+  } catch { showToast(tr('toastError'), true); }
 }
 
 function confirmDelQ(idx) {
   const p = queueData[idx];
-  showConfirm(tr('confirmDelTitle'), tr('confirmDelMsg', p.name || ''), () => {
-    queueData.splice(idx, 1);
-    renderQueue();
-    renderStats();
-    showToast(tr('toastDeleted'));
+  showConfirm(tr('confirmDelTitle'), tr('confirmDelMsg', p.name || ''), async () => {
+    try {
+      const res = await api(`/remove/${p.id}`, { method: 'DELETE' });
+      if (res.ok) { queueData.splice(idx, 1); renderQueue(); renderStats(); showToast(tr('toastDeleted')); }
+      else showToast(tr('toastError'), true);
+    } catch { showToast(tr('toastError'), true); }
   });
 }
 
 /* ════════════════════════════════════
    CALL NEXT
 ════════════════════════════════════ */
-function callNext() {
-  if (queueData.length === 0) { showToast(tr('qEmpty'), true); return; }
-  if (currentPatient) {
-    // Archive current to results before moving on
-    const now = new Date();
-    resultsData.unshift({
-      name: currentPatient.name,
-      age:  currentPatient.age,
-      phone: currentPatient.phone,
-      bpm:  72 + Math.floor(Math.random()*40 - 10),
-      temp: (36.5 + Math.random()*1.5).toFixed(1),
-      health: ['Norm','Norm','High','Low'][Math.floor(Math.random()*4)],
-      duration: Math.floor(Math.random()*60)+30,
-      dateReceived: now.toISOString().split('T')[0],
-      timeReceived: now.toTimeString().slice(0,5),
-      notes: '',
-    });
-  }
-  currentPatient = { ...queueData.shift() };
-  renderCurrentPatient();
-  renderQueue();
-  renderStats();
-  renderActivityLog();
-  showToast(`${currentPatient.name} — ${tr('liveTag')}`);
+async function callNext() {
+  try {
+    const res = await api('/next');
+    if (res.ok) {
+      const d = await res.json();
+      currentPatient = d.current || null;
+      // Refresh queue & results from server
+      const [qRes, resRes] = await Promise.all([api('/queue'), api('/results')]);
+      if (qRes.ok)   queueData   = await qRes.json();
+      if (resRes.ok) resultsData = await resRes.json();
+      renderCurrentPatient();
+      renderQueue();
+      renderStats();
+      renderActivityLog();
+      if (currentPatient) showToast(`${currentPatient.name} — ${tr('liveTag')}`);
+      else showToast(tr('qEmpty'), true);
+    } else { showToast(tr('toastError'), true); }
+  } catch { showToast(tr('toastError'), true); }
 }
 
 /* ════════════════════════════════════
@@ -2306,19 +2367,30 @@ function openAddModal() {
   setTimeout(() => document.getElementById('addName')?.focus(), 100);
 }
 
-function saveAddPatient() {
+async function saveAddPatient() {
   const name  = document.getElementById('addName').value.trim();
   const phone = document.getElementById('addPhone').value.trim();
   const age   = document.getElementById('addAge').value.trim();
   if (!name) { showToast(tr('toastRequired'), true); return; }
-  const now = new Date();
-  const t   = now.toTimeString().slice(0,5);
-  queueData.push({ id: Date.now(), name, phone, age: age ? parseInt(age) : null, addedAt: t, skipped: false });
-  closeModal('addModal');
-  renderQueue();
-  renderStats();
-  renderActivityLog();
-  showToast(tr('toastSaved'));
+  try {
+    const res  = await api('/admin/add-patient', {
+      method: 'POST',
+      body: JSON.stringify({ name, phone, age: age ? parseInt(age) : null }),
+    });
+    const data = await res.json();
+    if (res.ok) {
+      // Refresh queue & current from server
+      const [qRes, curRes] = await Promise.all([api('/queue'), api('/current')]);
+      if (qRes.ok)   queueData      = await qRes.json();
+      if (curRes.ok) currentPatient = await curRes.json();
+      closeModal('addModal');
+      renderQueue();
+      renderCurrentPatient();
+      renderStats();
+      renderActivityLog();
+      showToast(tr('toastSaved'));
+    } else { showToast(data.error || tr('toastError'), true); }
+  } catch { showToast(tr('toastError'), true); }
 }
 
 /* ════════════════════════════════════
@@ -2335,16 +2407,27 @@ function openEditQ(idx) {
   openModal('editQModal');
 }
 
-function saveEditQ() {
+async function saveEditQ() {
   const idx   = parseInt(document.getElementById('editQId').value);
   const name  = document.getElementById('editQName').value.trim();
   const phone = document.getElementById('editQPhone').value.trim();
   const age   = document.getElementById('editQAge').value.trim();
   if (!name) { showToast(tr('toastRequired'), true); return; }
-  queueData[idx] = { ...queueData[idx], name, phone, age: age ? parseInt(age) : null };
-  closeModal('editQModal');
-  renderQueue();
-  showToast(tr('toastSaved'));
+  const p = queueData[idx];
+  if (!p) return;
+  try {
+    const res  = await api(`/admin/queue/${p.id}`, {
+      method: 'PUT',
+      body: JSON.stringify({ name, phone, age: age ? parseInt(age) : null }),
+    });
+    const data = await res.json();
+    if (res.ok) {
+      queueData[idx] = { ...queueData[idx], name, phone, age: age ? parseInt(age) : null };
+      closeModal('editQModal');
+      renderQueue();
+      showToast(tr('toastSaved'));
+    } else { showToast(data.error || tr('toastError'), true); }
+  } catch { showToast(tr('toastError'), true); }
 }
 
 /* ════════════════════════════════════
@@ -2358,15 +2441,24 @@ function openEditCurModal() {
   openModal('editCurModal');
 }
 
-function saveEditCur() {
+async function saveEditCur() {
   const name  = document.getElementById('editCurName').value.trim();
   const phone = document.getElementById('editCurPhone').value.trim();
   const age   = document.getElementById('editCurAge').value.trim();
   if (!name) { showToast(tr('toastRequired'), true); return; }
-  currentPatient = { ...currentPatient, name, phone, age: age ? parseInt(age) : null };
-  closeModal('editCurModal');
-  renderCurrentPatient();
-  showToast(tr('toastSaved'));
+  try {
+    const res  = await api('/admin/current', {
+      method: 'PUT',
+      body: JSON.stringify({ name, phone, age: age ? parseInt(age) : null }),
+    });
+    const data = await res.json();
+    if (res.ok) {
+      currentPatient = { ...currentPatient, name, phone, age: age ? parseInt(age) : null };
+      closeModal('editCurModal');
+      renderCurrentPatient();
+      showToast(tr('toastSaved'));
+    } else { showToast(data.error || tr('toastError'), true); }
+  } catch { showToast(tr('toastError'), true); }
 }
 
 /* ════════════════════════════════════
@@ -2461,23 +2553,29 @@ function openEditRes(idx) {
   openModal('editResModal');
 }
 
-function saveEditRes() {
+async function saveEditRes() {
   const idx   = parseInt(document.getElementById('editResIdx').value);
   const name  = document.getElementById('editResName').value.trim();
   if (!name) { showToast(tr('toastRequired'), true); return; }
-  resultsData[idx] = {
-    ...resultsData[idx],
+  const body = {
     name,
-    age:    document.getElementById('editResAge').value.trim() || null,
+    age:    document.getElementById('editResAge').value.trim()   || null,
     phone:  document.getElementById('editResPhone').value.trim(),
-    bpm:    parseFloat(document.getElementById('editResBpm').value) || null,
+    bpm:    parseFloat(document.getElementById('editResBpm').value)  || null,
     temp:   parseFloat(document.getElementById('editResTemp').value) || null,
     health: document.getElementById('editResHealth').value,
     notes:  document.getElementById('editResNotes').value.trim(),
   };
-  closeModal('editResModal');
-  renderResults();
-  showToast(tr('toastSaved'));
+  try {
+    const res  = await api(`/admin/result/${idx}`, { method: 'PUT', body: JSON.stringify(body) });
+    const data = await res.json();
+    if (res.ok) {
+      resultsData[idx] = { ...resultsData[idx], ...body };
+      closeModal('editResModal');
+      renderResults();
+      showToast(tr('toastSaved'));
+    } else { showToast(data.error || tr('toastError'), true); }
+  } catch { showToast(tr('toastError'), true); }
 }
 
 /* ════════════════════════════════════
@@ -2485,11 +2583,16 @@ function saveEditRes() {
 ════════════════════════════════════ */
 function confirmDelRes(idx) {
   const r = resultsData[idx];
-  showConfirm(tr('confirmDelResTitle'), tr('confirmDelResMsg', r.name||''), () => {
-    resultsData.splice(idx, 1);
-    renderResults();
-    renderStats();
-    showToast(tr('toastDeleted'));
+  showConfirm(tr('confirmDelResTitle'), tr('confirmDelResMsg', r.name||''), async () => {
+    try {
+      const res = await api(`/admin/result/${idx}`, { method: 'DELETE' });
+      if (res.ok) {
+        resultsData.splice(idx, 1);
+        renderResults();
+        renderStats();
+        showToast(tr('toastDeleted'));
+      } else { showToast(tr('toastError'), true); }
+    } catch { showToast(tr('toastError'), true); }
   });
 }
 
@@ -2497,12 +2600,22 @@ function confirmDelRes(idx) {
    CLEAR ALL
 ════════════════════════════════════ */
 function confirmClear() {
-  showConfirm(tr('confirmClearTitle'), tr('confirmClearMsg'), () => {
-    resultsData = [];
-    _curPage = 1;
-    renderResults();
-    renderStats();
-    showToast(tr('toastCleared'));
+  showConfirm(tr('confirmClearTitle'), tr('confirmClearMsg'), async () => {
+    try {
+      const res = await api('/clear', { method: 'POST' });
+      if (res.ok) {
+        resultsData = [];
+        queueData   = [];
+        currentPatient = null;
+        _curPage = 1;
+        renderQueue();
+        renderCurrentPatient();
+        renderResults();
+        renderStats();
+        renderActivityLog();
+        showToast(tr('toastCleared'));
+      } else { showToast(tr('toastError'), true); }
+    } catch { showToast(tr('toastError'), true); }
   }, '🗑️');
 }
 
@@ -2596,6 +2709,7 @@ function showToast(msg, isError=false) {
 window.addEventListener('DOMContentLoaded', () => {
   applyTranslations();
   startClock();
+  tryRestoreSession();
 });
 </script>
 </body>

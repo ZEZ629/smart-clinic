@@ -1,0 +1,1514 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#0c1a2e">
+<title>Admin Dashboard — Smart Clinic</title>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+/* ═══════════════════════════════════════════════════════════
+   ROOT TOKENS
+═══════════════════════════════════════════════════════════ */
+:root {
+  --teal:       #0d9488;
+  --teal-l:     #14b8a6;
+  --teal-d:     #0f766e;
+  --navy:       #070f1c;
+  --navy-mid:   #0c1a2e;
+  --navy-card:  #112240;
+  --navy-el:    #162844;
+  --accent:     #38bdf8;
+  --accent2:    #a78bfa;
+  --white:      #f0f9ff;
+  --muted:      #94a3b8;
+  --success:    #10b981;
+  --danger:     #f43f5e;
+  --warning:    #f59e0b;
+  --border:     rgba(148,163,184,0.09);
+}
+
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+html { -webkit-text-size-adjust:100%; }
+
+body {
+  font-family:'Tajawal',sans-serif;
+  background:var(--navy);
+  color:var(--white);
+  min-height:100vh;
+  overflow-x:hidden;
+}
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar { width:5px; height:5px; }
+::-webkit-scrollbar-track { background:transparent; }
+::-webkit-scrollbar-thumb { background:rgba(13,148,136,0.35); border-radius:10px; }
+
+/* ── NOTICE BAR ── */
+#noticeBar {
+  position:fixed; top:0; left:0; right:0; z-index:600;
+  display:flex; align-items:center; justify-content:space-between; gap:10px;
+  padding:9px clamp(14px,4vw,28px);
+  background:rgba(13,148,136,0.12); backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px);
+  border-bottom:1px solid rgba(13,148,136,0.3); box-shadow:0 2px 20px rgba(13,148,136,0.15);
+  animation:noticeSlideIn 0.5s cubic-bezier(0.16,1,0.3,1) both;
+}
+@keyframes noticeSlideIn{from{transform:translateY(-100%);opacity:0}to{transform:translateY(0);opacity:1}}
+.notice-inner { display:flex; align-items:center; gap:10px; flex:1; min-width:0; }
+.notice-icon  { font-size:0.95rem; flex-shrink:0; color:var(--teal-l); }
+.notice-text  { font-size:0.72rem; color:var(--teal-l); font-weight:500; line-height:1.4; }
+.notice-close { width:26px; height:26px; border-radius:50%; border:1px solid rgba(13,148,136,0.3); background:rgba(13,148,136,0.1); color:var(--teal-l); cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:0.72rem; transition:all 0.2s; flex-shrink:0; }
+.notice-close:hover { background:rgba(13,148,136,0.25); transform:scale(1.1); }
+body.has-notice .header { top:40px; }
+
+/* ── LANG SWITCHER ── */
+#langSwitcher {
+  position:fixed; top:clamp(10px,2vw,14px); left:clamp(10px,2vw,16px); z-index:700;
+  display:flex; align-items:center; gap:4px;
+  background:rgba(22,40,68,0.9); backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px);
+  border:1px solid rgba(13,148,136,0.3); border-radius:30px; padding:4px;
+  box-shadow:0 4px 20px rgba(0,0,0,0.35),0 0 20px rgba(13,148,136,0.15);
+}
+html[dir="ltr"] #langSwitcher { left:auto; right:clamp(10px,2vw,16px); }
+.lang-btn { padding:5px 12px; border-radius:22px; border:none; cursor:pointer; font-family:'Tajawal',sans-serif; font-size:0.7rem; font-weight:700; background:transparent; color:var(--muted); transition:all 0.3s cubic-bezier(0.16,1,0.3,1); white-space:nowrap; }
+.lang-btn.active { background:linear-gradient(135deg,var(--teal),var(--teal-d)); color:#fff; box-shadow:0 2px 14px rgba(13,148,136,0.5); }
+.lang-btn:hover:not(.active) { color:var(--white); background:rgba(13,148,136,0.14); transform:scale(1.04); }
+
+/* ═══════════════════════════════════════════════════════════
+   LOGIN SCREEN
+═══════════════════════════════════════════════════════════ */
+#loginScreen {
+  position:fixed; inset:0; z-index:1000;
+  background:radial-gradient(ellipse at 30% 40%, rgba(13,148,136,0.15) 0%, transparent 60%),
+             linear-gradient(135deg,var(--navy) 0%,var(--navy-mid) 100%);
+  display:flex; align-items:center; justify-content:center; padding:20px;
+}
+.login-card {
+  background:rgba(17,34,64,0.92); backdrop-filter:blur(24px);
+  border:1px solid rgba(13,148,136,0.25); border-radius:24px;
+  padding:clamp(28px,6vw,48px) clamp(24px,5vw,40px);
+  width:100%; max-width:400px;
+  box-shadow:0 30px 80px rgba(0,0,0,0.5),inset 0 1px 0 rgba(255,255,255,0.06);
+  animation:popIn .5s cubic-bezier(.16,1,.3,1) both; text-align:center;
+}
+@keyframes popIn { from{transform:scale(.88);opacity:0} to{transform:scale(1);opacity:1} }
+.login-icon {
+  width:72px; height:72px; background:linear-gradient(135deg,var(--teal),var(--teal-d));
+  border-radius:20px; display:flex; align-items:center; justify-content:center;
+  font-size:2rem; margin:0 auto 20px;
+  box-shadow:0 8px 24px rgba(13,148,136,0.45),0 0 50px rgba(13,148,136,0.15);
+  animation:iconGlow 3s ease-in-out infinite;
+}
+@keyframes iconGlow{0%,100%{box-shadow:0 8px 24px rgba(13,148,136,.45),0 0 50px rgba(13,148,136,.15)}50%{box-shadow:0 8px 32px rgba(13,148,136,.7),0 0 70px rgba(13,148,136,.3)}}
+.login-title { font-size:clamp(1.2rem,3vw,1.5rem); font-weight:900; margin-bottom:6px; background:linear-gradient(135deg,var(--white),var(--teal-l)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+.login-sub   { font-size:.82rem; color:var(--muted); margin-bottom:28px; }
+.login-field { position:relative; margin-bottom:16px; }
+.login-field input {
+  width:100%; background:rgba(7,15,28,.7); border:1px solid rgba(148,163,184,.14);
+  border-radius:12px; padding:13px 46px 13px 16px; color:var(--white);
+  font-family:'Tajawal',sans-serif; font-size:16px; outline:none;
+  transition:all .25s; -webkit-appearance:none;
+}
+html[dir="ltr"] .login-field input { padding:13px 16px 13px 46px; }
+.login-field input:focus { border-color:var(--teal); box-shadow:0 0 0 3px rgba(13,148,136,.18); }
+.login-field .f-icon { position:absolute; right:14px; top:50%; transform:translateY(-50%); color:var(--muted); font-size:.95rem; }
+html[dir="ltr"] .login-field .f-icon { right:auto; left:14px; }
+.login-err { color:#f87171; font-size:.78rem; margin-bottom:12px; display:none; }
+.login-err.show { display:block; }
+.btn-login {
+  width:100%; padding:13px; background:linear-gradient(135deg,var(--teal),var(--teal-d));
+  border:none; border-radius:12px; color:#fff; font-family:'Tajawal',sans-serif;
+  font-size:1rem; font-weight:700; cursor:pointer; transition:all .25s;
+}
+.btn-login:hover { transform:translateY(-2px); box-shadow:0 8px 24px rgba(13,148,136,.45); }
+.btn-login:active { transform:translateY(0); }
+
+/* ═══════════════════════════════════════════════════════════
+   MAIN APP
+═══════════════════════════════════════════════════════════ */
+#app { display:none; }
+#app.visible { display:block; }
+
+/* ── HEADER ── */
+.header {
+  background:rgba(12,26,46,.96); backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px);
+  border-bottom:1px solid rgba(13,148,136,.18);
+  padding:clamp(11px,2vw,16px) clamp(14px,3vw,28px);
+  display:flex; align-items:center; justify-content:space-between;
+  position:sticky; top:0; z-index:100; gap:10px; flex-wrap:wrap;
+  transition:top 0.3s;
+}
+.header-brand { display:flex; align-items:center; gap:10px; }
+.header-icon {
+  width:clamp(34px,6vw,44px); height:clamp(34px,6vw,44px);
+  background:linear-gradient(135deg,var(--teal),var(--teal-d));
+  border-radius:11px; display:flex; align-items:center; justify-content:center;
+  font-size:clamp(.9rem,2vw,1.2rem); box-shadow:0 4px 14px rgba(13,148,136,.4); flex-shrink:0;
+  animation:iconGlow 3s ease-in-out infinite;
+}
+.header-title { font-size:clamp(.95rem,2.5vw,1.2rem); font-weight:900; }
+.header-sub   { font-size:clamp(.6rem,1.5vw,.7rem); color:var(--muted); }
+.header-right { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+
+.device-pill {
+  display:flex; align-items:center; gap:7px;
+  background:rgba(7,15,28,.6); border:1px solid var(--border);
+  border-radius:30px; padding:6px 13px;
+  font-size:clamp(.68rem,1.8vw,.78rem); font-weight:600;
+}
+.status-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; transition:all .4s; }
+.status-dot.online  { background:var(--success); box-shadow:0 0 8px var(--success); animation:blink2 2s infinite; }
+.status-dot.offline { background:var(--danger);  box-shadow:0 0 8px var(--danger); animation:blink2 1.5s infinite; }
+@keyframes blink2{0%,100%{opacity:1}50%{opacity:.4}}
+
+.btn-hdr {
+  display:flex; align-items:center; gap:6px;
+  padding:7px 13px; border-radius:20px;
+  font-family:'Tajawal',sans-serif; font-size:.75rem; font-weight:600;
+  cursor:pointer; transition:all .2s; touch-action:manipulation; border:none;
+}
+.btn-logout { background:rgba(244,63,94,.1); border:1px solid rgba(244,63,94,.22); color:#f87171; }
+.btn-logout:hover { background:rgba(244,63,94,.2); }
+
+/* ── LAYOUT ── */
+.main { padding:clamp(14px,2.5vw,24px) clamp(10px,2.5vw,22px); max-width:1500px; margin:0 auto; }
+
+/* ── STATS ── */
+.stats-grid {
+  display:grid; grid-template-columns:repeat(auto-fit,minmax(clamp(120px,22vw,170px),1fr));
+  gap:clamp(8px,1.8vw,14px); margin-bottom:clamp(14px,2.5vw,22px);
+}
+.stat-card {
+  background:rgba(22,40,68,.82); backdrop-filter:blur(12px);
+  border:1px solid var(--border); border-radius:clamp(12px,2vw,17px);
+  padding:clamp(13px,2.5vw,18px); position:relative; overflow:hidden;
+  transition:transform .2s,box-shadow .2s;
+}
+.stat-card:hover { transform:translateY(-3px); box-shadow:0 10px 28px rgba(0,0,0,.3); }
+.stat-card::before { content:''; position:absolute; top:0;left:0;right:0;height:3px; border-radius:17px 17px 0 0; }
+.stat-card.waiting::before { background:linear-gradient(90deg,var(--success),#059669); }
+.stat-card.done::before    { background:linear-gradient(90deg,var(--accent),#0ea5e9); }
+.stat-card.results::before { background:linear-gradient(90deg,var(--accent2),#7c3aed); }
+.stat-card.queue::before   { background:linear-gradient(90deg,var(--warning),#d97706); }
+.stat-icon  { font-size:clamp(1.1rem,2.5vw,1.5rem); opacity:.65; margin-bottom:6px; }
+.stat-label { font-size:clamp(.65rem,1.6vw,.74rem); color:var(--muted); font-weight:500; }
+.stat-value { font-size:clamp(1.5rem,4vw,2.1rem); font-weight:900; line-height:1.1; }
+.waiting .stat-value{color:var(--success)} .done .stat-value{color:var(--accent)}
+.results .stat-value{color:var(--accent2)} .queue .stat-value{color:var(--warning)}
+
+/* ── DASH GRID ── */
+.dash-grid { display:grid; grid-template-columns:1fr; gap:clamp(10px,2vw,18px); }
+@media(min-width:768px)  { .dash-grid{grid-template-columns:1fr 1fr} .dash-grid .full-w{grid-column:span 2} }
+@media(min-width:1100px) { .dash-grid{grid-template-columns:1.1fr 1fr 1.5fr} .dash-grid .full-w{grid-column:span 3} }
+
+/* ── CURRENT PATIENT ── */
+.current-patient {
+  background:linear-gradient(135deg,rgba(13,148,136,.16),rgba(56,189,248,.07));
+  border:1px solid rgba(13,148,136,.28); border-radius:clamp(14px,2.5vw,20px);
+  padding:clamp(18px,3vw,26px);
+  display:flex; flex-direction:column; align-items:center; text-align:center;
+  position:relative; overflow:hidden;
+}
+.current-patient::before {
+  content:''; position:absolute; top:0;left:0;right:0;height:3px;
+  background:linear-gradient(90deg,var(--teal),var(--accent),var(--teal-l));
+}
+.patient-avatar {
+  width:clamp(58px,11vw,76px); height:clamp(58px,11vw,76px);
+  background:linear-gradient(135deg,var(--teal),var(--teal-d));
+  border-radius:50%; display:flex; align-items:center; justify-content:center;
+  font-size:clamp(1.5rem,3.5vw,2rem); margin-bottom:12px;
+  box-shadow:0 8px 24px rgba(13,148,136,.4);
+  animation:avatarPulse 2.5s ease-in-out infinite; position:relative;
+}
+.patient-avatar::after { content:''; position:absolute; inset:-4px; border-radius:50%; border:2px solid rgba(13,148,136,.3); animation:ringExpand 2.5s ease-out infinite; }
+@keyframes avatarPulse{0%,100%{box-shadow:0 8px 24px rgba(13,148,136,.4)}50%{box-shadow:0 8px 32px rgba(13,148,136,.65)}}
+@keyframes ringExpand{0%{transform:scale(1);opacity:.6}100%{transform:scale(1.45);opacity:0}}
+
+.live-badge { display:inline-flex; align-items:center; gap:6px; background:rgba(16,185,129,.12); border:1px solid rgba(16,185,129,.25); border-radius:20px; padding:4px 12px; font-size:.7rem; color:var(--success); font-weight:600; margin-bottom:10px; }
+.live-dot { width:6px; height:6px; background:var(--success); border-radius:50%; animation:blink2 1.5s infinite; }
+
+.cur-name { font-size:clamp(1.1rem,3vw,1.5rem); font-weight:900; margin-bottom:10px; background:linear-gradient(135deg,var(--white),var(--teal-l)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+.info-pills { display:flex; gap:7px; flex-wrap:wrap; justify-content:center; margin-bottom:14px; }
+.pill { display:flex; align-items:center; gap:5px; background:rgba(7,15,28,.5); border:1px solid var(--border); border-radius:20px; padding:4px 11px; font-size:clamp(.68rem,1.6vw,.76rem); color:var(--muted); }
+
+.btn-next { padding:clamp(9px,2vw,12px) clamp(22px,4vw,32px); background:linear-gradient(135deg,var(--warning),#d97706); border:none; border-radius:30px; font-family:'Tajawal',sans-serif; font-size:clamp(.84rem,2vw,.95rem); font-weight:700; color:#111; cursor:pointer; transition:all .25s; box-shadow:0 6px 20px rgba(245,158,11,.35); touch-action:manipulation; margin-bottom:8px; }
+.btn-next:hover { transform:translateY(-2px); box-shadow:0 10px 28px rgba(245,158,11,.5); }
+.btn-edit-cur { padding:7px 18px; background:rgba(56,189,248,.1); border:1px solid rgba(56,189,248,.22); border-radius:20px; color:var(--accent); font-family:'Tajawal',sans-serif; font-size:.75rem; font-weight:600; cursor:pointer; transition:all .2s; }
+.btn-edit-cur:hover { background:rgba(56,189,248,.2); }
+.no-patient { color:var(--muted); font-size:clamp(.85rem,2vw,.95rem); padding:14px 0; }
+
+/* ── PANEL ── */
+.panel { background:rgba(22,40,68,.84); backdrop-filter:blur(14px); border:1px solid var(--border); border-radius:clamp(14px,2.5vw,20px); overflow:hidden; }
+.panel-header { padding:clamp(12px,2vw,16px) clamp(14px,2.5vw,20px); border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; gap:8px; flex-wrap:wrap; }
+.panel-title { font-size:clamp(.84rem,2vw,.96rem); font-weight:700; display:flex; align-items:center; gap:7px; }
+.panel-badge { font-size:.68rem; background:rgba(13,148,136,.15); border:1px solid rgba(13,148,136,.25); color:var(--teal-l); padding:2px 9px; border-radius:20px; }
+.panel-body  { padding:clamp(12px,2vw,18px); }
+
+.search-bar { display:flex; gap:8px; margin-bottom:12px; }
+.search-bar input { flex:1; background:rgba(7,15,28,.6); border:1px solid var(--border); border-radius:10px; padding:8px 12px; color:var(--white); font-family:'Tajawal',sans-serif; font-size:.82rem; outline:none; transition:border-color .2s; }
+.search-bar input:focus { border-color:var(--teal); }
+.btn-add-patient { padding:8px 14px; background:linear-gradient(135deg,var(--teal),var(--teal-d)); border:none; border-radius:10px; color:#fff; font-family:'Tajawal',sans-serif; font-size:.78rem; font-weight:700; cursor:pointer; transition:all .2s; white-space:nowrap; }
+.btn-add-patient:hover { transform:translateY(-1px); box-shadow:0 5px 16px rgba(13,148,136,.4); }
+
+.queue-list { list-style:none; display:flex; flex-direction:column; gap:8px; max-height:340px; overflow-y:auto; }
+.queue-item { display:flex; align-items:center; gap:10px; background:rgba(7,15,28,.5); border:1px solid var(--border); border-radius:13px; padding:10px 12px; transition:all .2s; cursor:grab; animation:slideIn .3s ease both; }
+.queue-item.dragging { opacity:.5; transform:scale(.97); cursor:grabbing; }
+.queue-item.drag-over { border-color:var(--teal); background:rgba(13,148,136,.08); }
+@keyframes slideIn{from{opacity:0;transform:translateX(10px)}to{opacity:1;transform:translateX(0)}}
+.queue-item:hover { background:rgba(13,148,136,.08); border-color:rgba(13,148,136,.2); }
+
+.q-num { width:28px; height:28px; background:linear-gradient(135deg,var(--teal-d),var(--teal)); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:.72rem; font-weight:900; flex-shrink:0; }
+.q-info { flex:1; min-width:0; }
+.q-name { font-size:clamp(.78rem,2vw,.88rem); font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.q-meta { font-size:.68rem; color:var(--muted); margin-top:2px; display:flex; gap:6px; flex-wrap:wrap; }
+.q-skipped { font-size:.62rem; background:rgba(245,158,11,.12); color:var(--warning); border-radius:8px; padding:1px 6px; }
+.q-time { font-size:.65rem; color:var(--teal-l); background:rgba(13,148,136,.1); padding:2px 7px; border-radius:8px; flex-shrink:0; }
+.q-actions { display:flex; gap:4px; flex-shrink:0; }
+.q-btn { width:27px; height:27px; border-radius:7px; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:.75rem; transition:all .18s; touch-action:manipulation; }
+.q-btn.up   { background:rgba(56,189,248,.1); color:var(--accent); }
+.q-btn.down { background:rgba(56,189,248,.1); color:var(--accent); }
+.q-btn.edit { background:rgba(167,139,250,.1); color:var(--accent2); }
+.q-btn.skip { background:rgba(245,158,11,.1); color:var(--warning); }
+.q-btn.del  { background:rgba(244,63,94,.1); color:var(--danger); }
+.q-btn:hover { transform:scale(1.15); }
+
+.empty-state { text-align:center; padding:clamp(20px,4vw,30px) 16px; color:var(--muted); }
+.empty-icon  { font-size:clamp(1.6rem,4vw,2.2rem); margin-bottom:8px; opacity:.45; }
+.empty-text  { font-size:clamp(.78rem,2vw,.88rem); }
+
+/* ── RESULTS TABLE ── */
+.results-toolbar { display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-bottom:14px; }
+.results-toolbar input,.results-toolbar select { background:rgba(7,15,28,.6); border:1px solid var(--border); border-radius:10px; padding:7px 11px; color:var(--white); font-family:'Tajawal',sans-serif; font-size:.8rem; outline:none; transition:border-color .2s; -webkit-appearance:none; }
+.results-toolbar input { flex:1; min-width:130px; }
+.results-toolbar select { min-width:110px; }
+.results-toolbar input:focus,.results-toolbar select:focus { border-color:var(--teal); }
+.results-toolbar select option { background:var(--navy-card); }
+
+.table-wrap { overflow-x:auto; -webkit-overflow-scrolling:touch; border-radius:10px; }
+table { width:100%; border-collapse:collapse; min-width:640px; }
+th { padding:9px 11px; text-align:center; font-size:clamp(.62rem,1.6vw,.7rem); color:var(--muted); font-weight:600; border-bottom:1px solid var(--border); white-space:nowrap; background:rgba(7,15,28,.4); cursor:pointer; user-select:none; transition:color .2s; }
+th:hover { color:var(--teal-l); }
+td { padding:9px 11px; text-align:center; font-size:clamp(.7rem,1.8vw,.8rem); border-bottom:1px solid rgba(148,163,184,.05); white-space:nowrap; transition:background .15s; }
+tr:last-child td { border-bottom:none; }
+tbody tr:hover td { background:rgba(13,148,136,.05); }
+
+.health-badge { display:inline-flex; align-items:center; gap:4px; padding:3px 10px; border-radius:20px; font-size:.66rem; font-weight:700; }
+.health-Norm{background:rgba(16,185,129,.12);border:1px solid rgba(16,185,129,.25);color:#34d399}
+.health-High{background:rgba(244,63,94,.12);border:1px solid rgba(244,63,94,.25);color:#fb7185}
+.health-Low {background:rgba(56,189,248,.12);border:1px solid rgba(56,189,248,.25);color:var(--accent)}
+.bpm-val { font-weight:700; }
+.bpm-val.high{color:#fb7185} .bpm-val.low{color:var(--accent)} .bpm-val.norm{color:#34d399}
+.note-cell { max-width:120px; overflow:hidden; text-overflow:ellipsis; color:var(--muted); font-size:.68rem; }
+.tbl-actions { display:flex; gap:5px; justify-content:center; }
+.tbl-btn { padding:4px 10px; border-radius:8px; border:none; cursor:pointer; font-family:'Tajawal',sans-serif; font-size:.66rem; font-weight:600; transition:all .18s; }
+.tbl-btn.edit { background:rgba(167,139,250,.12); color:var(--accent2); border:1px solid rgba(167,139,250,.22); }
+.tbl-btn.del  { background:rgba(244,63,94,.1); color:var(--danger); border:1px solid rgba(244,63,94,.2); }
+.tbl-btn:hover { transform:translateY(-1px); filter:brightness(1.15); }
+
+.pagination { display:flex; align-items:center; justify-content:center; gap:6px; margin-top:14px; }
+.pg-btn { width:32px; height:32px; border-radius:8px; border:1px solid var(--border); background:rgba(22,40,68,.8); color:var(--white); cursor:pointer; font-family:'Tajawal',sans-serif; font-size:.78rem; transition:all .18s; display:flex; align-items:center; justify-content:center; }
+.pg-btn:hover { border-color:var(--teal); color:var(--teal-l); }
+.pg-btn.active { background:var(--teal); border-color:var(--teal); color:#fff; }
+.pg-info { font-size:.72rem; color:var(--muted); }
+
+/* ── MODALS ── */
+.modal-bg { position:fixed; inset:0; background:rgba(7,15,28,.88); backdrop-filter:blur(10px); z-index:500; display:flex; align-items:center; justify-content:center; opacity:0; pointer-events:none; transition:opacity .3s; padding:16px; }
+.modal-bg.show { opacity:1; pointer-events:all; }
+.modal-box { background:var(--navy-card); border:1px solid rgba(13,148,136,.28); border-radius:22px; padding:clamp(20px,4vw,32px) clamp(18px,4vw,28px); width:100%; max-width:460px; max-height:90vh; overflow-y:auto; animation:popIn .35s cubic-bezier(.16,1,.3,1) both; box-shadow:0 30px 80px rgba(0,0,0,.55); }
+.modal-danger { border-color:rgba(244,63,94,.3); }
+.modal-title  { font-size:clamp(1rem,2.5vw,1.2rem); font-weight:900; margin-bottom:18px; display:flex; align-items:center; gap:9px; border-bottom:1px solid var(--border); padding-bottom:13px; }
+.form-row     { margin-bottom:14px; }
+.form-label   { display:block; font-size:.75rem; color:var(--muted); margin-bottom:6px; font-weight:500; }
+.form-input,.form-select { width:100%; background:rgba(7,15,28,.7); border:1px solid var(--border); border-radius:10px; padding:10px 13px; color:var(--white); font-family:'Tajawal',sans-serif; font-size:.88rem; outline:none; transition:border-color .2s,box-shadow .2s; -webkit-appearance:none; }
+.form-input:focus,.form-select:focus { border-color:var(--teal); box-shadow:0 0 0 3px rgba(13,148,136,.15); }
+.form-select option { background:var(--navy-card); }
+.form-textarea { width:100%; background:rgba(7,15,28,.7); border:1px solid var(--border); border-radius:10px; padding:10px 13px; color:var(--white); font-family:'Tajawal',sans-serif; font-size:.88rem; outline:none; transition:border-color .2s; resize:vertical; min-height:70px; }
+.form-textarea:focus { border-color:var(--teal); }
+.form-row-2 { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:14px; }
+@media(max-width:400px) { .form-row-2{grid-template-columns:1fr} }
+.modal-actions { display:flex; gap:9px; margin-top:20px; flex-wrap:wrap; }
+.btn-save { flex:1; padding:11px; background:linear-gradient(135deg,var(--teal),var(--teal-d)); border:none; border-radius:12px; color:#fff; font-family:'Tajawal',sans-serif; font-size:.9rem; font-weight:700; cursor:pointer; transition:all .2s; min-width:110px; }
+.btn-save:hover { box-shadow:0 6px 18px rgba(13,148,136,.45); transform:translateY(-1px); }
+.btn-modal-cancel { padding:11px 18px; background:rgba(148,163,184,.08); border:1px solid rgba(148,163,184,.15); border-radius:12px; color:var(--muted); font-family:'Tajawal',sans-serif; font-size:.9rem; cursor:pointer; transition:all .2s; }
+.btn-modal-cancel:hover { background:rgba(148,163,184,.16); }
+.btn-confirm-del { flex:1; padding:11px; background:var(--danger); border:none; border-radius:12px; color:#fff; font-family:'Tajawal',sans-serif; font-size:.9rem; font-weight:700; cursor:pointer; transition:all .2s; min-width:110px; }
+.btn-confirm-del:hover { background:#e11d48; transform:translateY(-1px); }
+.danger-icon { font-size:2.5rem; text-align:center; margin-bottom:12px; }
+.danger-msg  { font-size:.85rem; color:var(--muted); text-align:center; margin-bottom:6px; line-height:1.6; }
+
+/* ── TOAST ── */
+.toast { position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(100px); background:rgba(12,26,46,.97); backdrop-filter:blur(20px); border:1px solid var(--teal); border-radius:14px; padding:10px 20px; font-size:.86rem; font-weight:600; color:var(--teal-l); z-index:999; transition:transform .35s cubic-bezier(.16,1,.3,1); box-shadow:0 8px 24px rgba(0,0,0,.4); white-space:nowrap; max-width:calc(100vw - 32px); }
+.toast.show { transform:translateX(-50%) translateY(0); }
+.toast.error { border-color:var(--danger); color:#f87171; }
+
+/* ── FOOTER ── */
+.smart-footer { position:relative; z-index:20; width:100%; margin-top:clamp(24px,5vw,44px); padding:clamp(16px,3.5vw,24px) clamp(16px,4vw,36px); background:linear-gradient(135deg,rgba(7,15,28,.97),rgba(12,26,46,.95),rgba(17,34,64,.97)); backdrop-filter:blur(24px); -webkit-backdrop-filter:blur(24px); border-top:1px solid rgba(13,148,136,.2); box-shadow:0 -8px 40px rgba(0,0,0,.3),inset 0 1px 0 rgba(255,255,255,.04); overflow:hidden; }
+.footer-glow { position:absolute; top:0;left:0;right:0; height:1px; background:linear-gradient(90deg,transparent,rgba(13,148,136,.6),rgba(56,189,248,.8),rgba(13,148,136,.6),transparent); animation:glowSweep 4s ease-in-out infinite alternate; }
+@keyframes glowSweep{from{opacity:.5;transform:scaleX(.7)}to{opacity:1;transform:scaleX(1)}}
+.smart-footer::before { content:''; position:absolute; width:300px;height:300px; border-radius:50%; background:radial-gradient(circle,rgba(13,148,136,.05),transparent 70%); top:-130px;left:50%;transform:translateX(-50%);filter:blur(40px); animation:footerOrb 6s ease-in-out infinite alternate; pointer-events:none; }
+@keyframes footerOrb{from{opacity:.5;transform:translateX(-50%) scale(.9)}to{opacity:1;transform:translateX(-50%) scale(1.1)}}
+.footer-content { position:relative;z-index:1; display:flex;align-items:center;justify-content:space-between; gap:clamp(14px,3vw,22px);flex-wrap:wrap;max-width:1500px;margin:0 auto; }
+.footer-brand h3 { font-family:'Tajawal',sans-serif;font-size:clamp(1rem,2.5vw,1.2rem);font-weight:900; background:linear-gradient(135deg,#f0f9ff,#14b8a6 60%,#38bdf8); -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text; background-size:200% auto;animation:gradShift 4s ease-in-out infinite alternate;margin-bottom:4px; }
+@keyframes gradShift{from{background-position:0% center}to{background-position:100% center}}
+.footer-brand p { font-family:'Tajawal',sans-serif;font-size:clamp(.7rem,1.6vw,.78rem);color:#94a3b8;line-height:1.5; }
+.footer-brand p strong { font-weight:800;color:#14b8a6;text-shadow:0 0 12px rgba(20,184,166,.4); }
+.footer-social { display:flex;align-items:center;gap:clamp(7px,1.5vw,11px);flex-wrap:wrap; }
+.social-btn { width:clamp(36px,6.5vw,44px);height:clamp(36px,6.5vw,44px);border-radius:50%; display:flex;align-items:center;justify-content:center;font-size:clamp(.85rem,1.8vw,1rem); color:#94a3b8;text-decoration:none;position:relative;overflow:hidden; transition:transform .28s cubic-bezier(.16,1,.3,1),box-shadow .28s,color .28s,background .28s,border-color .28s; background:rgba(22,40,68,.7);border:1px solid rgba(148,163,184,.12); backdrop-filter:blur(10px);touch-action:manipulation; }
+.social-btn::before{content:'';position:absolute;inset:0;border-radius:50%;background:linear-gradient(135deg,rgba(255,255,255,.08),transparent 60%);opacity:0;transition:opacity .3s}
+.social-btn:hover::before{opacity:1}
+.social-btn:hover{transform:translateY(-3px) scale(1.12)}
+.social-btn.facebook:hover  {color:#4f9cf9;box-shadow:0 0 18px rgba(79,156,249,.45);border-color:rgba(79,156,249,.35);background:rgba(79,156,249,.1)}
+.social-btn.instagram:hover {color:#e879f9;box-shadow:0 0 18px rgba(232,121,249,.4);border-color:rgba(232,121,249,.3);background:rgba(167,139,250,.1)}
+.social-btn.youtube:hover   {color:#0A66E2;box-shadow:0 0 18px rgba(10, 102, 194, 0.45),0 6px 20px rgba(0, 0, 0, 0.3);border-color: rgba(10, 102, 194, 0.35);background: rgba(10, 102, 194, 0.10);}
+.social-btn.whatsapp:hover  {color:#34d399;box-shadow:0 0 18px rgba(52,211,153,.45);border-color:rgba(52,211,153,.35);background:rgba(52,211,153,.1)}
+.social-btn.phone:hover     {color:#38bdf8;box-shadow:0 0 18px rgba(56,189,248,.45);border-color:rgba(56,189,248,.35);background:rgba(56,189,248,.1)}
+.social-btn:active{transform:translateY(0) scale(.96)}
+@media(max-width:540px){.footer-content{flex-direction:column;align-items:center;text-align:center;gap:12px}.footer-social{justify-content:center}}
+
+/* ── RESPONSIVE ── */
+@media(max-width:640px){ .tbl-actions{flex-direction:column;align-items:center} .q-actions{flex-wrap:wrap} .results-toolbar{flex-direction:column} .results-toolbar input,.results-toolbar select{width:100%} }
+@media(max-width:480px){ .stats-grid{grid-template-columns:1fr 1fr} .header-right{gap:6px} .btn-hdr span{display:none} }
+@media(prefers-reduced-motion:reduce){ *,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important} }
+</style>
+</head>
+<body>
+
+<!-- Arabic Notice Bar -->
+<div id="noticeBar" style="display:none">
+  <div class="notice-inner">
+    <span class="notice-icon">ℹ️</span>
+    <span class="notice-text" id="noticeText"></span>
+  </div>
+  <button class="notice-close" onclick="closeNotice()" aria-label="Close">✕</button>
+</div>
+
+<!-- Language Switcher -->
+<div id="langSwitcher">
+  <button class="lang-btn" id="langBtnAr" onclick="setLanguage('ar')">🇪🇬 العربية</button>
+  <button class="lang-btn" id="langBtnEn" onclick="setLanguage('en')">🇺🇸 English</button>
+</div>
+
+<!-- LOGIN SCREEN -->
+<div id="loginScreen">
+  <div class="login-card">
+    <div class="login-icon">🔐</div>
+    <div class="login-title" id="loginTitle">Admin Dashboard</div>
+    <div class="login-sub" id="loginSub">Smart Clinic Admin — أدخل كلمة المرور للمتابعة</div>
+    <div class="login-err" id="loginErr"></div>
+    <div class="login-field">
+      <input id="pwInput" type="password" autocomplete="current-password">
+      <i class="fa-solid fa-lock f-icon"></i>
+    </div>
+    <button class="btn-login" id="btnLogin" onclick="doLogin()"></button>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div id="app">
+
+<!-- Header -->
+<div class="header">
+  <div class="header-brand">
+    <div class="header-icon">🏥</div>
+    <div>
+      <div class="header-title" id="headerTitle">Admin Dashboard</div>
+      <div class="header-sub">Smart Clinic Admin v4.0</div>
+    </div>
+  </div>
+  <div class="header-right">
+    <div class="device-pill">
+      <div class="status-dot offline" id="statusDot"></div>
+      <span id="statusText"></span>
+    </div>
+    <button class="btn-hdr btn-logout" onclick="doLogout()">
+      <i class="fa-solid fa-right-from-bracket"></i> <span id="btnLogout"></span>
+    </button>
+  </div>
+</div>
+
+<!-- Main -->
+<div class="main">
+
+  <!-- Stats -->
+  <div class="stats-grid">
+    <div class="stat-card waiting"><div class="stat-icon">👥</div><div class="stat-label" id="statWaitingLabel"></div><div class="stat-value" id="sWaiting">0</div></div>
+    <div class="stat-card done">   <div class="stat-icon">✅</div><div class="stat-label" id="statDoneLabel"></div>   <div class="stat-value" id="sDone">0</div></div>
+    <div class="stat-card results"><div class="stat-icon">🩺</div><div class="stat-label" id="statResultsLabel"></div><div class="stat-value" id="sResults">0</div></div>
+    <div class="stat-card queue">  <div class="stat-icon">⏱️</div><div class="stat-label" id="statTotalLabel"></div>  <div class="stat-value" id="sTotal">0</div></div>
+  </div>
+
+  <!-- Dashboard grid -->
+  <div class="dash-grid">
+
+    <!-- Current patient -->
+    <div>
+      <div class="current-patient" id="currentPanel">
+        <div id="noPatient">
+          <div class="patient-avatar">🏥</div>
+          <div class="no-patient" id="noPatientText"></div>
+          <div style="font-size:.76rem;color:var(--muted);margin-top:8px" id="waitingNextText"></div>
+        </div>
+        <div id="hasPatient" style="display:none;flex-direction:column;align-items:center;width:100%">
+          <div class="patient-avatar">👤</div>
+          <div class="live-badge"><div class="live-dot"></div> <span id="liveBadgeText"></span></div>
+          <div class="cur-name" id="curName">—</div>
+          <div class="info-pills" id="curPills"></div>
+          <button class="btn-next" id="btnCallNext" onclick="callNext()"></button>
+          <button class="btn-edit-cur" id="btnEditCur" onclick="openEditCurrent()"></button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Queue panel -->
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-title">📋 <span id="queuePanelTitle"></span> <span class="panel-badge" id="qBadge">0</span></div>
+        <button class="btn-add-patient" id="btnAddPatient" onclick="openAddPatient()"></button>
+      </div>
+      <div class="panel-body">
+        <div class="search-bar">
+          <input id="queueSearch" type="text" oninput="filterQueue()">
+        </div>
+        <ul class="queue-list" id="queueList"></ul>
+      </div>
+    </div>
+
+    <!-- Results panel -->
+    <div class="panel full-w">
+      <div class="panel-header">
+        <div class="panel-title">🩺 <span id="resultsPanelTitle"></span> <span class="panel-badge" id="rBadge">0</span></div>
+        <button class="btn-hdr btn-logout" style="background:rgba(244,63,94,.1);border:1px solid rgba(244,63,94,.22);color:#f87171" id="btnClearAll" onclick="confirmClearAll()"></button>
+      </div>
+      <div class="panel-body">
+        <div class="results-toolbar">
+          <input id="rSearch" type="text" oninput="renderResults()">
+          <select id="rHealth" onchange="renderResults()">
+            <option value="" id="optAllStatus"></option>
+            <option value="Norm" id="optNorm"></option>
+            <option value="High" id="optHigh"></option>
+            <option value="Low"  id="optLow"></option>
+          </select>
+          <select id="rSort" onchange="renderResults()">
+            <option value="newest" id="optNewest"></option>
+            <option value="oldest" id="optOldest"></option>
+            <option value="bpm-h">BPM ↑</option>
+            <option value="bpm-l">BPM ↓</option>
+            <option value="name"  id="optName"></option>
+          </select>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th id="thPatient"></th>
+                <th id="thAge"></th>
+                <th id="thBpm"></th>
+                <th id="thTemp"></th>
+                <th id="thStatus"></th>
+                <th id="thDuration"></th>
+                <th id="thDate"></th>
+                <th id="thTime"></th>
+                <th id="thNotes"></th>
+                <th id="thActions"></th>
+              </tr>
+            </thead>
+            <tbody id="resultsBody"></tbody>
+          </table>
+          <div class="empty-state" id="rEmpty" style="display:none">
+            <div class="empty-icon">📊</div>
+            <div class="empty-text" id="rEmptyText"></div>
+          </div>
+        </div>
+        <div class="pagination" id="pagination"></div>
+      </div>
+    </div>
+
+  </div><!-- /dash-grid -->
+</div><!-- /main -->
+
+<!-- FOOTER -->
+<footer class="smart-footer">
+  <div class="footer-glow"></div>
+  <div class="footer-content">
+    <div class="footer-brand">
+      <h3>Smart Clinic</h3>
+      <p>Designed and developed by <strong>Ezzat Sadek</strong> © 2026</p>
+    </div>
+    <div class="footer-social">
+      <a href="https://www.facebook.com/share/1EQFvntGjL/" class="social-btn facebook" aria-label="Facebook"><i class="fa-brands fa-facebook-f"></i></a>
+      <a href="https://www.instagram.com/zahran_0x?igsh=dmZjYWFjeTdvc3Nm" class="social-btn instagram" aria-label="Instagram"><i class="fa-brands fa-instagram"></i></a>
+      <a href="https://www.linkedin.com/in/ezzatsadek" class="social-btn youtube" aria-label="YouTube"><i class="fa-brands fa-linkedin"></i></a>
+      <a href="https://wa.me/qr/36JSTVAMJZ3LB1" class="social-btn whatsapp" aria-label="WhatsApp"><i class="fa-brands fa-whatsapp"></i></a>
+    </div>
+  </div>
+</footer>
+
+</div><!-- /app -->
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- MODAL: EDIT QUEUE PATIENT -->
+<div class="modal-bg" id="editQModal">
+  <div class="modal-box">
+    <div class="modal-title">✏️ <span id="editQModalTitle"></span> <span id="editQLabel" style="color:var(--teal-l);font-size:.85em"></span></div>
+    <input type="hidden" id="editQId">
+    <div class="form-row"><label class="form-label" id="editQNameLabel"></label><input class="form-input" id="editQName" type="text"></div>
+    <div class="form-row-2">
+      <div><label class="form-label" id="editQPhoneLabel"></label><input class="form-input" id="editQPhone" type="tel" maxlength="11" inputmode="numeric"></div>
+      <div><label class="form-label" id="editQAgeLabel"></label><input class="form-input" id="editQAge" type="number" min="1" max="120"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-save" id="editQSaveBtn" onclick="saveEditQueue()"></button>
+      <button class="btn-modal-cancel" id="editQCancelBtn" onclick="closeModal('editQModal')"></button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: EDIT CURRENT PATIENT -->
+<div class="modal-bg" id="editCurModal">
+  <div class="modal-box">
+    <div class="modal-title">✏️ <span id="editCurModalTitle"></span></div>
+    <div class="form-row"><label class="form-label" id="editCurNameLabel"></label><input class="form-input" id="editCurName" type="text"></div>
+    <div class="form-row-2">
+      <div><label class="form-label" id="editCurPhoneLabel"></label><input class="form-input" id="editCurPhone" type="tel" maxlength="11" inputmode="numeric"></div>
+      <div><label class="form-label" id="editCurAgeLabel"></label><input class="form-input" id="editCurAge" type="number" min="1" max="120"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-save" id="editCurSaveBtn" onclick="saveEditCurrent()"></button>
+      <button class="btn-modal-cancel" id="editCurCancelBtn" onclick="closeModal('editCurModal')"></button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: ADD PATIENT -->
+<div class="modal-bg" id="addPatientModal">
+  <div class="modal-box">
+    <div class="modal-title">➕ <span id="addPatientModalTitle"></span></div>
+    <div class="form-row"><label class="form-label" id="addNameLabel"></label><input class="form-input" id="addName" type="text"></div>
+    <div class="form-row-2">
+      <div><label class="form-label" id="addPhoneLabel"></label><input class="form-input" id="addPhone" type="tel" maxlength="11" inputmode="numeric" placeholder="01XXXXXXXXX"></div>
+      <div><label class="form-label" id="addAgeLabel"></label><input class="form-input" id="addAge" type="number" min="1" max="120" placeholder="25"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-save" id="addSaveBtn" onclick="saveAddPatient()"></button>
+      <button class="btn-modal-cancel" id="addCancelBtn" onclick="closeModal('addPatientModal')"></button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: EDIT RESULT -->
+<div class="modal-bg" id="editResultModal">
+  <div class="modal-box">
+    <div class="modal-title">✏️ <span id="editResultModalTitle"></span> <span id="editRLabel" style="color:var(--teal-l);font-size:.85em"></span></div>
+    <input type="hidden" id="editRIdx">
+    <div class="form-row"><label class="form-label" id="editRNameLabel"></label><input class="form-input" id="editRName" type="text"></div>
+    <div class="form-row-2">
+      <div><label class="form-label" id="editRAgeLabel"></label><input class="form-input" id="editRAge" type="number" min="1" max="120"></div>
+      <div><label class="form-label" id="editRPhoneLabel"></label><input class="form-input" id="editRPhone" type="tel" maxlength="11" inputmode="numeric"></div>
+    </div>
+    <div class="form-row-2">
+      <div><label class="form-label" id="editRBpmLabel"></label><input class="form-input" id="editRBpm" type="number" min="20" max="250" step="0.1"></div>
+      <div><label class="form-label" id="editRTempLabel"></label><input class="form-input" id="editRTemp" type="number" min="30" max="45" step="0.1"></div>
+    </div>
+    <div class="form-row">
+      <label class="form-label" id="editRHealthLabel"></label>
+      <select class="form-select" id="editRHealth">
+        <option value="Norm" id="editRHealthNorm"></option>
+        <option value="High" id="editRHealthHigh"></option>
+        <option value="Low"  id="editRHealthLow"></option>
+      </select>
+    </div>
+    <div class="form-row">
+      <label class="form-label" id="editRNotesLabel"></label>
+      <textarea class="form-textarea" id="editRNotes"></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-save" id="editRSaveBtn" onclick="saveEditResult()"></button>
+      <button class="btn-modal-cancel" id="editRCancelBtn" onclick="closeModal('editResultModal')"></button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: CONFIRM DELETE -->
+<div class="modal-bg" id="confirmModal">
+  <div class="modal-box modal-danger" style="max-width:380px;text-align:center">
+    <div class="danger-icon" id="confirmIcon">⚠️</div>
+    <div class="modal-title" style="justify-content:center;border:none;padding-bottom:0" id="confirmTitle"></div>
+    <div class="danger-msg" id="confirmMsg"></div>
+    <div class="modal-actions" style="justify-content:center">
+      <button class="btn-confirm-del" id="confirmOkBtn"></button>
+      <button class="btn-modal-cancel" id="confirmCancelBtn" onclick="closeModal('confirmModal')"></button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ════════════════════════════════════════════════════════════
+   ADMIN PAGE — SELF-CONTAINED i18n SYSTEM
+════════════════════════════════════════════════════════════ */
+const translations = {
+  ar: {
+    pageTitle:          "Admin Dashboard — العيادة الذكية",
+    noticeText:         "يفضل استخدام اللغة الإنجليزية للحصول على أفضل تجربة للنظام",
+    loginSub:           "Smart Clinic Admin — أدخل كلمة المرور للمتابعة",
+    loginPlaceholder:   "كلمة المرور",
+    btnLogin:           "🚀 دخول",
+    loginErrEmpty:      "⚠️ أدخل كلمة المرور",
+    loginErrWrong:      "❌ كلمة مرور غير صحيحة",
+    loginErrConn:       "❌ تعذر الاتصال بالخادم",
+    // header
+    headerTitle:        "Admin Dashboard",
+    btnLogout:          "Logout",
+    deviceOnline:       "الجهاز متصل ✓",
+    deviceOffline:      "الجهاز غير متصل",
+    deviceChecking:     "فحص...",
+    // stats
+    statWaiting:        "في الانتظار",
+    statDone:           "تم الفحص",
+    statResults:        "النتائج",
+    statTotal:          "الإجمالي",
+    // current patient
+    noPatientText:      "لا يوجد مريض حالي",
+    waitingNextText:    "انتظار استدعاء التالي",
+    liveBadge:          "على الجهاز الآن",
+    btnCallNext:        "⏭️ استدعاء التالي",
+    btnEditCur:         "✏️ تعديل بيانات المريض",
+    pillYears:          "سنة",
+    // queue
+    queuePanelTitle:    "Queue System",
+    btnAddPatient:      "+ إضافة مريض",
+    queueSearchPlaceholder: "🔍 بحث في الطابور...",
+    queueEmpty:         "لا يوجد مرضى في الانتظار",
+    queueNoResults:     "لا نتائج للبحث",
+    qSkipped:           "تم التخطي",
+    qBtnUp:             "تقديم",
+    qBtnDown:           "تأخير",
+    qBtnEdit:           "تعديل",
+    qBtnSkip:           "تخطي",
+    qBtnDel:            "حذف",
+    // results
+    resultsPanelTitle:  "سجل نتائج الفحص",
+    btnClearAll:        "🗑️ مسح الكل",
+    rSearchPlaceholder: "🔍 بحث بالاسم...",
+    optAllStatus:       "كل الحالات",
+    optNorm:            "✓ طبيعي",
+    optHigh:            "↑ مرتفع",
+    optLow:             "↓ منخفض",
+    optNewest:          "الأحدث أولاً",
+    optOldest:          "الأقدم أولاً",
+    optName:            "الاسم",
+    thPatient:          "المريض",
+    thAge:              "العمر",
+    thBpm:              "النبض",
+    thTemp:             "الحرارة",
+    thStatus:           "الحالة",
+    thDuration:         "المدة",
+    thDate:             "التاريخ",
+    thTime:             "الوقت",
+    thNotes:            "ملاحظات",
+    thActions:          "إجراءات",
+    rEmptyText:         "لا توجد نتائج",
+    healthNorm:         "✓ طبيعي",
+    healthHigh:         "↑ مرتفع",
+    healthLow:          "↓ منخفض",
+    tblEdit:            "✏️ تعديل",
+    tblDel:             "🗑️ حذف",
+    pageInfo:           (n) => `${n} نتيجة`,
+    // modals
+    editQModalTitle:    "تعديل بيانات المريض",
+    editCurModalTitle:  "تعديل المريض الحالي",
+    addPatientModalTitle: "إضافة مريض يدوياً",
+    editResultModalTitle: "تعديل نتيجة الفحص",
+    labelFullName:      "الاسم الكامل",
+    labelPhone:         "رقم الهاتف",
+    labelAge:           "العمر",
+    labelPatientName:   "اسم المريض",
+    labelBpm:           "النبض (BPM)",
+    labelTemp:          "الحرارة (°C)",
+    labelHealthStatus:  "الحالة الصحية",
+    labelNotes:         "ملاحظات طبية",
+    editRHealthNorm:    "✓ طبيعي (60–100 BPM)",
+    editRHealthHigh:    "↑ مرتفع (أكثر من 100)",
+    editRHealthLow:     "↓ منخفض (أقل من 60)",
+    notesPlaceholder:   "أضف ملاحظات طبية...",
+    btnSave:            "💾 حفظ",
+    btnSaveEdits:       "💾 حفظ التعديلات",
+    btnAddToQueue:      "➕ إضافة للطابور",
+    btnCancel:          "إلغاء",
+    btnConfirmOk:       "✓ تأكيد",
+    // confirms
+    confirmDeleteTitle: (name) => `حذف "${name}"؟`,
+    confirmDeleteMsg:   "لن يمكن التراجع عن هذا الإجراء",
+    confirmDeleteResultTitle: (name) => `حذف نتيجة "${name}"؟`,
+    confirmDeleteResultMsg: "سيتم حذف نتيجة الفحص نهائياً ولا يمكن التراجع.",
+    confirmClearTitle:  "مسح جميع البيانات؟",
+    confirmClearMsg:    "سيتم مسح الطابور والمريض الحالي وجميع النتائج. لا يمكن التراجع.",
+    // toasts
+    toastReordered:     "✅ تم إعادة ترتيب الطابور",
+    toastReorderFail:   "❌ فشل الترتيب",
+    toastError:         "❌ خطأ",
+    toastSkipped:       "⏭ تم تخطي المريض",
+    toastSaved:         (name) => `✅ تم تعديل بيانات ${name}`,
+    toastAdded:         (name) => `✅ تم إضافة ${name}`,
+    toastAddFail:       "❌ فشل الإضافة",
+    toastSaveFail:      "❌ فشل الحفظ",
+    toastCallNext:      (name) => `✅ تم استدعاء: ${name}`,
+    toastQueueEmpty:    "⚠️ الطابور فارغ",
+    toastResultSaved:   (name) => `✅ تم تعديل نتيجة ${name}`,
+    toastResultDeleted: "🗑️ تم حذف النتيجة",
+    toastPatientDeleted:"🗑️ تم حذف المريض",
+    toastCleared:       "🗑️ تم مسح جميع البيانات",
+    toastSessionEnd:    "❌ انتهت الجلسة — أعد تسجيل الدخول",
+    errNameRequired:    "⚠️ الاسم مطلوب",
+    errPhoneDigits:     "⚠️ رقم الهاتف 11 رقم",
+    errAgeRange:        "⚠️ العمر يجب بين 1 و 120",
+    editCurSaved:       "✅ تم تعديل بيانات المريض الحالي",
+  },
+  en: {
+    pageTitle:          "Admin Dashboard — Smart Clinic",
+    noticeText:         "يفضل استخدام اللغة الإنجليزية للحصول على أفضل تجربة للنظام",
+    loginSub:           "Smart Clinic Admin — Enter password to continue",
+    loginPlaceholder:   "Password",
+    btnLogin:           "🚀 Login",
+    loginErrEmpty:      "⚠️ Please enter password",
+    loginErrWrong:      "❌ Incorrect password",
+    loginErrConn:       "❌ Unable to connect to server",
+    // header
+    headerTitle:        "Admin Dashboard",
+    btnLogout:          "Logout",
+    deviceOnline:       "Device Online ✓",
+    deviceOffline:      "Device Offline",
+    deviceChecking:     "Checking...",
+    // stats
+    statWaiting:        "Waiting",
+    statDone:           "Completed",
+    statResults:        "Results",
+    statTotal:          "Total",
+    // current patient
+    noPatientText:      "No current patient",
+    waitingNextText:    "Waiting to call next",
+    liveBadge:          "On device now",
+    btnCallNext:        "⏭️ Call Next",
+    btnEditCur:         "✏️ Edit Patient Data",
+    pillYears:          "yrs",
+    // queue
+    queuePanelTitle:    "Queue System",
+    btnAddPatient:      "+ Add Patient",
+    queueSearchPlaceholder: "🔍 Search queue...",
+    queueEmpty:         "No patients waiting",
+    queueNoResults:     "No search results",
+    qSkipped:           "Skipped",
+    qBtnUp:             "Move Up",
+    qBtnDown:           "Move Down",
+    qBtnEdit:           "Edit",
+    qBtnSkip:           "Skip",
+    qBtnDel:            "Delete",
+    // results
+    resultsPanelTitle:  "Medical Results Log",
+    btnClearAll:        "🗑️ Clear All",
+    rSearchPlaceholder: "🔍 Search by name...",
+    optAllStatus:       "All Statuses",
+    optNorm:            "✓ Normal",
+    optHigh:            "↑ High",
+    optLow:             "↓ Low",
+    optNewest:          "Newest First",
+    optOldest:          "Oldest First",
+    optName:            "Name",
+    thPatient:          "Patient",
+    thAge:              "Age",
+    thBpm:              "BPM",
+    thTemp:             "Temp",
+    thStatus:           "Status",
+    thDuration:         "Duration",
+    thDate:             "Date",
+    thTime:             "Time",
+    thNotes:            "Notes",
+    thActions:          "Actions",
+    rEmptyText:         "No results found",
+    healthNorm:         "✓ Normal",
+    healthHigh:         "↑ High",
+    healthLow:          "↓ Low",
+    tblEdit:            "✏️ Edit",
+    tblDel:             "🗑️ Delete",
+    pageInfo:           (n) => `${n} result(s)`,
+    // modals
+    editQModalTitle:    "Edit Patient Data",
+    editCurModalTitle:  "Edit Current Patient",
+    addPatientModalTitle: "Add Patient Manually",
+    editResultModalTitle: "Edit Medical Result",
+    labelFullName:      "Full Name",
+    labelPhone:         "Phone Number",
+    labelAge:           "Age",
+    labelPatientName:   "Patient Name",
+    labelBpm:           "Heart Rate (BPM)",
+    labelTemp:          "Temperature (°C)",
+    labelHealthStatus:  "Health Status",
+    labelNotes:         "Medical Notes",
+    editRHealthNorm:    "✓ Normal (60–100 BPM)",
+    editRHealthHigh:    "↑ High (above 100)",
+    editRHealthLow:     "↓ Low (below 60)",
+    notesPlaceholder:   "Add medical notes...",
+    btnSave:            "💾 Save",
+    btnSaveEdits:       "💾 Save Changes",
+    btnAddToQueue:      "➕ Add to Queue",
+    btnCancel:          "Cancel",
+    btnConfirmOk:       "✓ Confirm",
+    // confirms
+    confirmDeleteTitle: (name) => `Delete "${name}"?`,
+    confirmDeleteMsg:   "This action cannot be undone.",
+    confirmDeleteResultTitle: (name) => `Delete result for "${name}"?`,
+    confirmDeleteResultMsg: "The medical result will be permanently deleted.",
+    confirmClearTitle:  "Clear all data?",
+    confirmClearMsg:    "This will clear the queue, current patient, and all results. Cannot be undone.",
+    // toasts
+    toastReordered:     "✅ Queue reordered",
+    toastReorderFail:   "❌ Reorder failed",
+    toastError:         "❌ Error",
+    toastSkipped:       "⏭ Patient skipped",
+    toastSaved:         (name) => `✅ Updated ${name}`,
+    toastAdded:         (name) => `✅ Added ${name}`,
+    toastAddFail:       "❌ Failed to add patient",
+    toastSaveFail:      "❌ Save failed",
+    toastCallNext:      (name) => `✅ Called: ${name}`,
+    toastQueueEmpty:    "⚠️ Queue is empty",
+    toastResultSaved:   (name) => `✅ Updated result for ${name}`,
+    toastResultDeleted: "🗑️ Result deleted",
+    toastPatientDeleted:"🗑️ Patient deleted",
+    toastCleared:       "🗑️ All data cleared",
+    toastSessionEnd:    "❌ Session expired — please log in again",
+    errNameRequired:    "⚠️ Name is required",
+    errPhoneDigits:     "⚠️ Phone must be 11 digits",
+    errAgeRange:        "⚠️ Age must be between 1 and 120",
+    editCurSaved:       "✅ Current patient updated",
+  }
+};
+
+/* ── Language state ── */
+let _lang = localStorage.getItem("sc_lang") || "ar";
+let _noticeClosed = false;
+
+function tr(key, ...args) {
+  const val = (translations[_lang] || translations.ar)[key];
+  if (val === undefined) return key;
+  return typeof val === "function" ? val(...args) : val;
+}
+
+/* ── Apply translations ── */
+function applyTranslations() {
+  document.title = tr("pageTitle");
+  const s  = (id, prop, val) => { const el = document.getElementById(id); if (el) el[prop] = val; };
+  const sa = (id, attr, val) => { const el = document.getElementById(id); if (el) el.setAttribute(attr, val); };
+
+  // login
+  s("loginSub",          "textContent", tr("loginSub"));
+  s("btnLogin",          "textContent", tr("btnLogin"));
+  sa("pwInput", "placeholder", tr("loginPlaceholder"));
+
+  // header
+  s("headerTitle",       "textContent", tr("headerTitle"));
+  s("btnLogout",         "textContent", tr("btnLogout"));
+  s("statusText",        "textContent", tr("deviceChecking"));
+
+  // stats
+  s("statWaitingLabel",  "textContent", tr("statWaiting"));
+  s("statDoneLabel",     "textContent", tr("statDone"));
+  s("statResultsLabel",  "textContent", tr("statResults"));
+  s("statTotalLabel",    "textContent", tr("statTotal"));
+
+  // current patient
+  s("noPatientText",     "textContent", tr("noPatientText"));
+  s("waitingNextText",   "textContent", tr("waitingNextText"));
+  s("liveBadgeText",     "textContent", tr("liveBadge"));
+  s("btnCallNext",       "textContent", tr("btnCallNext"));
+  s("btnEditCur",        "textContent", tr("btnEditCur"));
+
+  // queue panel
+  s("queuePanelTitle",   "textContent", tr("queuePanelTitle"));
+  s("btnAddPatient",     "textContent", tr("btnAddPatient"));
+  sa("queueSearch", "placeholder", tr("queueSearchPlaceholder"));
+
+  // results panel
+  s("resultsPanelTitle", "textContent", tr("resultsPanelTitle"));
+  s("btnClearAll",       "textContent", tr("btnClearAll"));
+  sa("rSearch", "placeholder", tr("rSearchPlaceholder"));
+
+  // select options
+  s("optAllStatus", "textContent", tr("optAllStatus"));
+  s("optNorm",      "textContent", tr("optNorm"));
+  s("optHigh",      "textContent", tr("optHigh"));
+  s("optLow",       "textContent", tr("optLow"));
+  s("optNewest",    "textContent", tr("optNewest"));
+  s("optOldest",    "textContent", tr("optOldest"));
+  s("optName",      "textContent", tr("optName"));
+
+  // table headers
+  s("thPatient",   "textContent", tr("thPatient"));
+  s("thAge",       "textContent", tr("thAge"));
+  s("thBpm",       "textContent", tr("thBpm"));
+  s("thTemp",      "textContent", tr("thTemp"));
+  s("thStatus",    "textContent", tr("thStatus"));
+  s("thDuration",  "textContent", tr("thDuration"));
+  s("thDate",      "textContent", tr("thDate"));
+  s("thTime",      "textContent", tr("thTime"));
+  s("thNotes",     "textContent", tr("thNotes"));
+  s("thActions",   "textContent", tr("thActions"));
+  s("rEmptyText",  "textContent", tr("rEmptyText"));
+
+  // modals
+  s("editQModalTitle",    "textContent", tr("editQModalTitle"));
+  s("editCurModalTitle",  "textContent", tr("editCurModalTitle"));
+  s("addPatientModalTitle","textContent", tr("addPatientModalTitle"));
+  s("editResultModalTitle","textContent", tr("editResultModalTitle"));
+
+  // modal labels
+  s("editQNameLabel",    "textContent", tr("labelFullName"));
+  s("editQPhoneLabel",   "textContent", tr("labelPhone"));
+  s("editQAgeLabel",     "textContent", tr("labelAge"));
+  s("editCurNameLabel",  "textContent", tr("labelFullName"));
+  s("editCurPhoneLabel", "textContent", tr("labelPhone"));
+  s("editCurAgeLabel",   "textContent", tr("labelAge"));
+  s("addNameLabel",      "textContent", tr("labelFullName"));
+  s("addPhoneLabel",     "textContent", tr("labelPhone"));
+  s("addAgeLabel",       "textContent", tr("labelAge"));
+  s("editRNameLabel",    "textContent", tr("labelPatientName"));
+  s("editRAgeLabel",     "textContent", tr("labelAge"));
+  s("editRPhoneLabel",   "textContent", tr("labelPhone"));
+  s("editRBpmLabel",     "textContent", tr("labelBpm"));
+  s("editRTempLabel",    "textContent", tr("labelTemp"));
+  s("editRHealthLabel",  "textContent", tr("labelHealthStatus"));
+  s("editRNotesLabel",   "textContent", tr("labelNotes"));
+  s("editRHealthNorm",   "textContent", tr("editRHealthNorm"));
+  s("editRHealthHigh",   "textContent", tr("editRHealthHigh"));
+  s("editRHealthLow",    "textContent", tr("editRHealthLow"));
+  sa("editRNotes", "placeholder", tr("notesPlaceholder"));
+
+  // modal buttons
+  s("editQSaveBtn",    "textContent", tr("btnSave"));
+  s("editQCancelBtn",  "textContent", tr("btnCancel"));
+  s("editCurSaveBtn",  "textContent", tr("btnSave"));
+  s("editCurCancelBtn","textContent", tr("btnCancel"));
+  s("addSaveBtn",      "textContent", tr("btnAddToQueue"));
+  s("addCancelBtn",    "textContent", tr("btnCancel"));
+  s("editRSaveBtn",    "textContent", tr("btnSaveEdits"));
+  s("editRCancelBtn",  "textContent", tr("btnCancel"));
+  s("confirmOkBtn",    "textContent", tr("btnConfirmOk"));
+  s("confirmCancelBtn","textContent", tr("btnCancel"));
+
+  updateNoticeBar();
+  // re-render dynamic content if data exists
+  if (queueData.length || currentData || resultsData.length) {
+    renderCurrent();
+    renderQueue();
+    renderResults();
+  }
+}
+
+/* ── Notice bar ── */
+function updateNoticeBar() {
+  const nb = document.getElementById("noticeBar");
+  const nt = document.getElementById("noticeText");
+  if (!nb || !nt) return;
+  nt.textContent = tr("noticeText");
+  const show = _lang === "ar" && !_noticeClosed;
+  nb.style.display = show ? "" : "none";
+  document.body.classList.toggle("has-notice", show);
+}
+
+/* ── Switcher highlight ── */
+function updateLangSwitcher() {
+  document.getElementById("langBtnAr").classList.toggle("active", _lang === "ar");
+  document.getElementById("langBtnEn").classList.toggle("active", _lang === "en");
+}
+
+/* ── Set language ── */
+function setLanguage(lang) {
+  _lang = lang;
+  localStorage.setItem("sc_lang", lang);
+  document.documentElement.lang = lang;
+  document.documentElement.dir  = lang === "ar" ? "rtl" : "ltr";
+  updateLangSwitcher();
+  applyTranslations();
+}
+
+/* ── Close notice ── */
+function closeNotice() {
+  _noticeClosed = true;
+  document.getElementById("noticeBar").style.display = "none";
+  document.body.classList.remove("has-notice");
+}
+
+/* ── Initialize ── */
+document.documentElement.lang = _lang;
+document.documentElement.dir  = _lang === "ar" ? "rtl" : "ltr";
+updateLangSwitcher();
+
+/* ════════════════════════════════════════════════════════════
+   STATE
+════════════════════════════════════════════════════════════ */
+const BASE = window.location.origin;
+let TOKEN   = sessionStorage.getItem("adminToken") || "";
+let queueData   = [];
+let resultsData = [];
+let currentData = null;
+
+const PAGE_SIZE = 10;
+let curPage = 1;
+let dragSrcId = null;
+
+/* ════════════════════════════════════════════════════════════
+   AUTH
+════════════════════════════════════════════════════════════ */
+async function doLogin() {
+  const pw  = document.getElementById("pwInput").value.trim();
+  const err = document.getElementById("loginErr");
+  err.classList.remove("show");
+  if (!pw) { err.textContent = tr("loginErrEmpty"); err.classList.add("show"); return; }
+  try {
+    const res  = await fetch(`${BASE}/admin/login`, { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({password:pw}) });
+    const data = await res.json();
+    if (res.ok) {
+      TOKEN = data.token;
+      sessionStorage.setItem("adminToken", TOKEN);
+      document.getElementById("loginScreen").style.display = "none";
+      document.getElementById("app").classList.add("visible");
+      startPolling();
+    } else {
+      err.textContent = "❌ " + (data.error || tr("loginErrWrong"));
+      err.classList.add("show");
+    }
+  } catch { err.textContent = tr("loginErrConn"); err.classList.add("show"); }
+}
+
+function doLogout() {
+  fetch(`${BASE}/admin/logout`, { method:"POST", headers:{"x-admin-token":TOKEN} }).catch(()=>{});
+  sessionStorage.removeItem("adminToken");
+  TOKEN = "";
+  location.reload();
+}
+
+if (TOKEN) {
+  document.getElementById("loginScreen").style.display = "none";
+  document.getElementById("app").classList.add("visible");
+  startPolling();
+}
+
+document.getElementById("pwInput").addEventListener("keydown", e => { if (e.key==="Enter") doLogin(); });
+
+/* ════════════════════════════════════════════════════════════
+   ADMIN API HELPER
+════════════════════════════════════════════════════════════ */
+async function api(method, path, body) {
+  const opts = { method, headers:{"Content-Type":"application/json","x-admin-token":TOKEN} };
+  if (body) opts.body = JSON.stringify(body);
+  const res = await fetch(BASE + path, opts);
+  if (res.status === 401) { showToast(tr("toastSessionEnd"), true); doLogout(); throw new Error("Unauthorized"); }
+  return res.json();
+}
+
+/* ════════════════════════════════════════════════════════════
+   POLLING
+════════════════════════════════════════════════════════════ */
+function startPolling() {
+  applyTranslations();
+  updateAll();
+  setInterval(updateAll, 2000);
+}
+
+async function updateAll() {
+  try {
+    const [status, queue, current, results] = await Promise.all([
+      fetch(`${BASE}/status`).then(r=>r.json()),
+      fetch(`${BASE}/queue`).then(r=>r.json()),
+      fetch(`${BASE}/current`).then(r=>r.json()),
+      fetch(`${BASE}/results`).then(r=>r.json()),
+    ]);
+
+    const dot = document.getElementById("statusDot");
+    const txt = document.getElementById("statusText");
+    dot.className = "status-dot " + (status.online ? "online" : "offline");
+    txt.textContent = status.online ? tr("deviceOnline") : tr("deviceOffline");
+
+    queueData   = Array.isArray(queue)   ? queue   : [];
+    resultsData = Array.isArray(results) ? results : [];
+    currentData = current || null;
+
+    document.getElementById("sWaiting").textContent = queueData.length;
+    document.getElementById("sDone").textContent    = resultsData.length;
+    document.getElementById("sResults").textContent = resultsData.length;
+    document.getElementById("sTotal").textContent   = queueData.length + resultsData.length + (currentData ? 1 : 0);
+
+    renderCurrent();
+    renderQueue();
+    renderResults();
+  } catch(e) { console.warn("Poll error", e); }
+}
+
+/* ════════════════════════════════════════════════════════════
+   CURRENT PATIENT
+════════════════════════════════════════════════════════════ */
+function renderCurrent() {
+  const noP  = document.getElementById("noPatient");
+  const hasP = document.getElementById("hasPatient");
+  if (currentData && currentData.name) {
+    noP.style.display  = "none";
+    hasP.style.display = "flex";
+    document.getElementById("curName").textContent = currentData.name;
+    let pills = `<div class="pill"><i class="fa-solid fa-phone" style="color:var(--teal-l)"></i> ${currentData.phone||"—"}</div>`;
+    if (currentData.age)      pills += `<div class="pill"> ${currentData.age} ${tr("pillYears")}</div>`;
+    if (currentData.joinedAt) pills += `<div class="pill"> ${currentData.joinedAt}</div>`;
+    document.getElementById("curPills").innerHTML = pills;
+  } else {
+    noP.style.display  = "block";
+    hasP.style.display = "none";
+  }
+}
+
+async function callNext() {
+  const d = await fetch(`${BASE}/next`).then(r=>r.json());
+  showToast(d.current ? tr("toastCallNext", d.current.name) : tr("toastQueueEmpty"));
+  setTimeout(updateAll, 300);
+}
+
+/* ════════════════════════════════════════════════════════════
+   QUEUE RENDER
+════════════════════════════════════════════════════════════ */
+function filterQueue() { renderQueue(); }
+
+function renderQueue() {
+  const search   = (document.getElementById("queueSearch").value || "").toLowerCase().trim();
+  const list     = document.getElementById("queueList");
+  const badge    = document.getElementById("qBadge");
+  const filtered = search ? queueData.filter(p => p.name?.toLowerCase().includes(search) || p.phone?.includes(search)) : queueData;
+  badge.textContent = queueData.length;
+
+  if (!filtered.length) {
+    list.innerHTML = `<div class="empty-state"><div class="empty-icon">${search ? "🔍" : ""}</div><div class="empty-text">${search ? tr("queueNoResults") : tr("queueEmpty")}</div></div>`;
+    return;
+  }
+
+  list.innerHTML = filtered.map((p) => {
+    const realIdx = queueData.findIndex(q => q.id === p.id);
+    return `
+    <li class="queue-item" draggable="true"
+        ondragstart="dragStart(event,${p.id})"
+        ondragover="dragOver(event)"
+        ondrop="dragDrop(event,${p.id})"
+        ondragend="dragEnd(event)"
+        id="qi-${p.id}">
+      <div class="q-num">${realIdx + 1}</div>
+      <div class="q-info">
+        <div class="q-name">${p.name} ${p.skipped ? `<span class="q-skipped">${tr("qSkipped")}</span>` : ""}</div>
+        <div class="q-meta">
+          <span>📱 ${p.phone}</span>
+          ${p.age ? `<span> ${p.age} ${tr("pillYears")}</span>` : ""}
+        </div>
+      </div>
+      <div class="q-time">${p.joinedAt||""}</div>
+      <div class="q-actions">
+        <button class="q-btn up"   title="${tr("qBtnUp")}"   onclick="movePatient(${p.id},'up')">▲</button>
+        <button class="q-btn down" title="${tr("qBtnDown")}" onclick="movePatient(${p.id},'down')">▼</button>
+        <button class="q-btn edit" title="${tr("qBtnEdit")}" onclick="openEditQueue(${p.id})">✏️</button>
+        <button class="q-btn skip" title="${tr("qBtnSkip")}" onclick="skipPatient(${p.id})">⏭</button>
+        <button class="q-btn del"  title="${tr("qBtnDel")}"  onclick="confirmDeleteQueue(${p.id},'${p.name.replace(/'/g,"\\'")}')">✕</button>
+      </div>
+    </li>`;
+  }).join("");
+}
+
+/* ════════════════════════════════════════════════════════════
+   DRAG & DROP
+════════════════════════════════════════════════════════════ */
+function dragStart(e, id) { dragSrcId = id; e.currentTarget.classList.add("dragging"); }
+function dragOver(e) { e.preventDefault(); e.currentTarget.classList.add("drag-over"); }
+function dragEnd(e)  { e.currentTarget.classList.remove("dragging"); document.querySelectorAll(".queue-item").forEach(el=>el.classList.remove("drag-over")); }
+
+async function dragDrop(e, targetId) {
+  e.preventDefault(); e.currentTarget.classList.remove("drag-over");
+  if (dragSrcId === targetId) return;
+  const ids  = [...queueData.map(p => p.id)];
+  const srcI = ids.indexOf(dragSrcId), tgtI = ids.indexOf(targetId);
+  if (srcI === -1 || tgtI === -1) return;
+  ids.splice(srcI, 1); ids.splice(tgtI, 0, dragSrcId);
+  try { await api("POST", "/admin/queue/reorder", { ids }); showToast(tr("toastReordered")); updateAll(); }
+  catch { showToast(tr("toastReorderFail"), true); }
+}
+
+/* ════════════════════════════════════════════════════════════
+   QUEUE ACTIONS
+════════════════════════════════════════════════════════════ */
+async function movePatient(id, direction) {
+  try { await api("POST", `/admin/queue/${id}/move`, { direction }); updateAll(); }
+  catch { showToast(tr("toastError"), true); }
+}
+
+async function skipPatient(id) {
+  try { await api("POST", `/admin/queue/${id}/skip`, {}); showToast(tr("toastSkipped")); updateAll(); }
+  catch { showToast(tr("toastError"), true); }
+}
+
+function confirmDeleteQueue(id, name) {
+  showConfirm(tr("confirmDeleteTitle", name), tr("confirmDeleteMsg"), async () => {
+    await fetch(`${BASE}/remove/${id}`, { method:"DELETE" });
+    showToast(tr("toastPatientDeleted")); updateAll();
+  });
+}
+
+/* ════════════════════════════════════════════════════════════
+   EDIT QUEUE PATIENT
+════════════════════════════════════════════════════════════ */
+function openEditQueue(id) {
+  const p = queueData.find(q => q.id === id);
+  if (!p) return;
+  document.getElementById("editQId").value    = id;
+  document.getElementById("editQLabel").textContent = p.name;
+  document.getElementById("editQName").value  = p.name;
+  document.getElementById("editQPhone").value = p.phone;
+  document.getElementById("editQAge").value   = p.age || "";
+  openModal("editQModal");
+}
+
+async function saveEditQueue() {
+  const id    = parseInt(document.getElementById("editQId").value);
+  const name  = document.getElementById("editQName").value.trim();
+  const phone = document.getElementById("editQPhone").value.trim();
+  const age   = document.getElementById("editQAge").value.trim();
+  if (!name) { showToast(tr("errNameRequired"), true); return; }
+  if (phone && !/^\d{11}$/.test(phone)) { showToast(tr("errPhoneDigits"), true); return; }
+  try {
+    await api("PUT", `/admin/queue/${id}`, { name, phone, age });
+    closeModal("editQModal"); showToast(tr("toastSaved", name)); updateAll();
+  } catch { showToast(tr("toastSaveFail"), true); }
+}
+
+/* ════════════════════════════════════════════════════════════
+   ADD PATIENT
+════════════════════════════════════════════════════════════ */
+function openAddPatient() {
+  ["addName","addPhone","addAge"].forEach(id => document.getElementById(id).value = "");
+  openModal("addPatientModal");
+}
+
+async function saveAddPatient() {
+  const name  = document.getElementById("addName").value.trim();
+  const phone = document.getElementById("addPhone").value.trim();
+  const age   = document.getElementById("addAge").value.trim();
+  if (!name)  { showToast(tr("errNameRequired"), true); return; }
+  if (!/^\d{11}$/.test(phone)) { showToast(tr("errPhoneDigits"), true); return; }
+  if (!age || parseInt(age) < 1 || parseInt(age) > 120) { showToast(tr("errAgeRange"), true); return; }
+  try {
+    const d = await api("POST", "/admin/add-patient", { name, phone, age });
+    if (d.error) { showToast("❌ " + d.error, true); return; }
+    closeModal("addPatientModal"); showToast(tr("toastAdded", name)); updateAll();
+  } catch { showToast(tr("toastAddFail"), true); }
+}
+
+/* ════════════════════════════════════════════════════════════
+   EDIT CURRENT PATIENT
+════════════════════════════════════════════════════════════ */
+function openEditCurrent() {
+  if (!currentData) return;
+  document.getElementById("editCurName").value  = currentData.name  || "";
+  document.getElementById("editCurPhone").value = currentData.phone || "";
+  document.getElementById("editCurAge").value   = currentData.age   || "";
+  openModal("editCurModal");
+}
+
+async function saveEditCurrent() {
+  const name  = document.getElementById("editCurName").value.trim();
+  const phone = document.getElementById("editCurPhone").value.trim();
+  const age   = document.getElementById("editCurAge").value.trim();
+  if (!name) { showToast(tr("errNameRequired"), true); return; }
+  if (phone && !/^\d{11}$/.test(phone)) { showToast(tr("errPhoneDigits"), true); return; }
+  try {
+    await api("PUT", "/admin/current", { name, phone, age });
+    closeModal("editCurModal"); showToast(tr("editCurSaved")); updateAll();
+  } catch { showToast(tr("toastSaveFail"), true); }
+}
+
+/* ════════════════════════════════════════════════════════════
+   RESULTS RENDER
+════════════════════════════════════════════════════════════ */
+function bpmClass(bpm) { if (!bpm) return ""; if (bpm < 60) return "low"; if (bpm > 100) return "high"; return "norm"; }
+function healthLabel(h) { return ({Norm: tr("healthNorm"), High: tr("healthHigh"), Low: tr("healthLow")})[h] || h || "—"; }
+function getHealth(r)   { return r.health || (r.bpm < 60 ? "Low" : r.bpm > 100 ? "High" : "Norm"); }
+
+function renderResults() {
+  const search   = (document.getElementById("rSearch").value || "").toLowerCase().trim();
+  const hFilter  = document.getElementById("rHealth").value;
+  const sortMode = document.getElementById("rSort").value;
+  const badge    = document.getElementById("rBadge");
+  const tbody    = document.getElementById("resultsBody");
+  const emptyEl  = document.getElementById("rEmpty");
+  const pagEl    = document.getElementById("pagination");
+
+  badge.textContent = resultsData.length;
+
+  let filtered = [...resultsData].map((r, i) => ({ ...r, _idx: i }));
+  if (search)  filtered = filtered.filter(r => r.name?.toLowerCase().includes(search) || r.phone?.includes(search));
+  if (hFilter) filtered = filtered.filter(r => getHealth(r) === hFilter);
+
+  if (sortMode === "oldest")  filtered.reverse();
+  else if (sortMode === "bpm-h") filtered.sort((a,b) => (b.bpm||0) - (a.bpm||0));
+  else if (sortMode === "bpm-l") filtered.sort((a,b) => (a.bpm||0) - (b.bpm||0));
+  else if (sortMode === "name")  filtered.sort((a,b) => (a.name||"").localeCompare(b.name||"", _lang === "ar" ? "ar" : "en"));
+
+  if (!filtered.length) {
+    tbody.innerHTML = ""; emptyEl.style.display = "block"; pagEl.innerHTML = ""; return;
+  }
+  emptyEl.style.display = "none";
+
+  const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
+  if (curPage > totalPages) curPage = 1;
+  const pageData = filtered.slice((curPage-1)*PAGE_SIZE, curPage*PAGE_SIZE);
+
+  tbody.innerHTML = pageData.map(r => {
+    const h   = getHealth(r);
+    const bCl = bpmClass(parseFloat(r.bpm));
+    const ageStr = r.age ? r.age + " " + tr("pillYears") : "—";
+    return `<tr>
+      <td style="color:var(--muted);font-size:.68rem">${r._idx + 1}</td>
+      <td><b>${r.name||"—"}</b></td>
+      <td>${ageStr}</td>
+      <td><span class="bpm-val ${bCl}">${r.bpm ? r.bpm + " BPM" : "—"}</span></td>
+      <td>${r.temp ? Number(r.temp).toFixed(1) + "°C" : "—"}</td>
+      <td><span class="health-badge health-${h}">${healthLabel(h)}</span></td>
+      <td>${r.duration ? r.duration + "s" : "—"}</td>
+      <td>${r.dateReceived||"—"}</td>
+      <td>${r.timeReceived||"—"}</td>
+      <td class="note-cell" title="${r.notes||""}">${r.notes || "—"}</td>
+      <td>
+        <div class="tbl-actions">
+          <button class="tbl-btn edit" onclick="openEditResult(${r._idx})">${tr("tblEdit")}</button>
+          <button class="tbl-btn del"  onclick="confirmDeleteResult(${r._idx},'${(r.name||"").replace(/'/g,"\\'")}')"> ${tr("tblDel")}</button>
+        </div>
+      </td>
+    </tr>`;
+  }).join("");
+
+  if (totalPages <= 1) { pagEl.innerHTML = ""; return; }
+  let pgHtml = "";
+  if (curPage > 1) pgHtml += `<button class="pg-btn" onclick="goPage(${curPage-1})">‹</button>`;
+  for (let p = 1; p <= totalPages; p++) {
+    if (p === 1 || p === totalPages || Math.abs(p - curPage) <= 2)
+      pgHtml += `<button class="pg-btn ${p===curPage?"active":""}" onclick="goPage(${p})">${p}</button>`;
+    else if (Math.abs(p - curPage) === 3)
+      pgHtml += `<span class="pg-info">…</span>`;
+  }
+  if (curPage < totalPages) pgHtml += `<button class="pg-btn" onclick="goPage(${curPage+1})">›</button>`;
+  pgHtml += `<span class="pg-info">${tr("pageInfo", filtered.length)}</span>`;
+  pagEl.innerHTML = pgHtml;
+}
+
+function goPage(p) { curPage = p; renderResults(); }
+
+/* ════════════════════════════════════════════════════════════
+   EDIT RESULT
+════════════════════════════════════════════════════════════ */
+function openEditResult(idx) {
+  const r = resultsData[idx];
+  if (!r) return;
+  document.getElementById("editRIdx").value   = idx;
+  document.getElementById("editRLabel").textContent = r.name || "";
+  document.getElementById("editRName").value  = r.name  || "";
+  document.getElementById("editRAge").value   = r.age   || "";
+  document.getElementById("editRPhone").value = r.phone || "";
+  document.getElementById("editRBpm").value   = r.bpm   || "";
+  document.getElementById("editRTemp").value  = r.temp  || "";
+  document.getElementById("editRHealth").value = r.health || "Norm";
+  document.getElementById("editRNotes").value  = r.notes || "";
+  openModal("editResultModal");
+}
+
+async function saveEditResult() {
+  const idx    = parseInt(document.getElementById("editRIdx").value);
+  const name   = document.getElementById("editRName").value.trim();
+  const age    = document.getElementById("editRAge").value.trim();
+  const phone  = document.getElementById("editRPhone").value.trim();
+  const bpm    = document.getElementById("editRBpm").value.trim();
+  const temp   = document.getElementById("editRTemp").value.trim();
+  const health = document.getElementById("editRHealth").value;
+  const notes  = document.getElementById("editRNotes").value.trim();
+  if (!name) { showToast(tr("errNameRequired"), true); return; }
+  try {
+    await api("PUT", `/admin/result/${idx}`, { name, age, phone, bpm, temp, health, notes });
+    closeModal("editResultModal"); showToast(tr("toastResultSaved", name)); updateAll();
+  } catch { showToast(tr("toastSaveFail"), true); }
+}
+
+/* ════════════════════════════════════════════════════════════
+   DELETE RESULT
+════════════════════════════════════════════════════════════ */
+function confirmDeleteResult(idx, name) {
+  showConfirm(tr("confirmDeleteResultTitle", name), tr("confirmDeleteResultMsg"), async () => {
+    await api("DELETE", `/admin/result/${idx}`, null);
+    showToast(tr("toastResultDeleted")); updateAll();
+  });
+}
+
+/* ════════════════════════════════════════════════════════════
+   CLEAR ALL
+════════════════════════════════════════════════════════════ */
+function confirmClearAll() {
+  showConfirm(tr("confirmClearTitle"), tr("confirmClearMsg"), async () => {
+    await fetch(`${BASE}/clear`, { method:"POST" });
+    showToast(tr("toastCleared")); updateAll();
+  }, "🗑️");
+}
+
+/* ════════════════════════════════════════════════════════════
+   MODAL HELPERS
+════════════════════════════════════════════════════════════ */
+function openModal(id) {
+  document.getElementById(id).classList.add("show");
+  document.getElementById(id).addEventListener("click", bgClose);
+}
+function closeModal(id) {
+  const el = document.getElementById(id);
+  el.classList.remove("show");
+  el.removeEventListener("click", bgClose);
+}
+function bgClose(e) { if (e.target === e.currentTarget) closeModal(e.currentTarget.id); }
+
+document.addEventListener("keydown", e => {
+  if (e.key === "Escape") {
+    ["editQModal","editCurModal","addPatientModal","editResultModal","confirmModal"].forEach(closeModal);
+  }
+});
+
+let _confirmCallback = null;
+function showConfirm(title, msg, onConfirm, icon = "⚠️") {
+  document.getElementById("confirmIcon").textContent = icon;
+  document.getElementById("confirmTitle").childNodes[0] && (document.getElementById("confirmTitle").childNodes[0].textContent = title + " ");
+  document.getElementById("confirmTitle").textContent = title;
+  document.getElementById("confirmMsg").innerHTML = msg;
+  document.getElementById("confirmOkBtn").textContent = tr("btnConfirmOk");
+  document.getElementById("confirmCancelBtn").textContent = tr("btnCancel");
+  _confirmCallback = onConfirm;
+  document.getElementById("confirmOkBtn").onclick = async () => {
+    closeModal("confirmModal");
+    if (_confirmCallback) await _confirmCallback();
+  };
+  openModal("confirmModal");
+}
+
+/* ════════════════════════════════════════════════════════════
+   TOAST
+════════════════════════════════════════════════════════════ */
+function showToast(msg, isError = false) {
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.className   = "toast" + (isError ? " error" : "");
+  t.classList.add("show");
+  clearTimeout(t._t);
+  t._t = setTimeout(() => t.classList.remove("show"), 3000);
+}
+
+/* ── Apply initial translations on load ── */
+window.addEventListener("DOMContentLoaded", () => { applyTranslations(); });
+</script>
+</body>
+</html>

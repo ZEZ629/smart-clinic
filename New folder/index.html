@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>العيادة الذكية — تسجيل</title>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --teal: #0d9488;
+    --teal-light: #14b8a6;
+    --teal-dark: #0f766e;
+    --navy: #0c1a2e;
+    --navy-mid: #112240;
+    --navy-card: #162844;
+    --accent: #38bdf8;
+    --accent2: #a78bfa;
+    --white: #f0f9ff;
+    --muted: #94a3b8;
+    --success: #10b981;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Tajawal', sans-serif;
+    background: var(--navy);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    position: relative;
+    color: var(--white);
+  }
+
+  /* ===== ANIMATED BACKGROUND ===== */
+  .bg-canvas {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    overflow: hidden;
+  }
+
+  /* Floating medical icons */
+  .med-float {
+    position: absolute;
+    opacity: 0.06;
+    font-size: 3rem;
+    animation: floatUp linear infinite;
+    user-select: none;
+  }
+
+  @keyframes floatUp {
+    0%   { transform: translateY(110vh) rotate(0deg); opacity: 0; }
+    10%  { opacity: 0.06; }
+    90%  { opacity: 0.06; }
+    100% { transform: translateY(-10vh) rotate(360deg); opacity: 0; }
+  }
+
+  /* Pulse rings */
+  .pulse-ring {
+    position: absolute;
+    border-radius: 50%;
+    border: 1px solid rgba(13, 148, 136, 0.15);
+    animation: expandRing 4s ease-out infinite;
+  }
+
+  @keyframes expandRing {
+    0%   { transform: scale(0); opacity: 0.5; }
+    100% { transform: scale(4); opacity: 0; }
+  }
+
+  /* ECG line */
+  .ecg-line {
+    position: fixed;
+    bottom: 60px;
+    left: 0;
+    width: 200%;
+    height: 60px;
+    opacity: 0.12;
+    animation: moveLeft 6s linear infinite;
+  }
+
+  @keyframes moveLeft {
+    from { transform: translateX(0); }
+    to   { transform: translateX(-50%); }
+  }
+
+  /* Gradient orbs */
+  .orb {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(80px);
+    animation: orbPulse 8s ease-in-out infinite alternate;
+  }
+  .orb1 {
+    width: 400px; height: 400px;
+    background: radial-gradient(circle, rgba(13,148,136,0.2), transparent 70%);
+    top: -100px; right: -100px;
+  }
+  .orb2 {
+    width: 350px; height: 350px;
+    background: radial-gradient(circle, rgba(56,189,248,0.15), transparent 70%);
+    bottom: -100px; left: -50px;
+    animation-delay: -4s;
+  }
+  @keyframes orbPulse {
+    from { transform: scale(1); }
+    to   { transform: scale(1.2); }
+  }
+
+  /* ===== CARD ===== */
+  .card {
+    position: relative;
+    z-index: 10;
+    background: rgba(22, 40, 68, 0.85);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(13, 148, 136, 0.25);
+    border-radius: 28px;
+    padding: 50px 45px 40px;
+    width: 90%;
+    max-width: 420px;
+    box-shadow:
+      0 25px 60px rgba(0,0,0,0.4),
+      0 0 0 1px rgba(255,255,255,0.04),
+      inset 0 1px 0 rgba(255,255,255,0.07);
+    animation: slideUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(40px) scale(0.96); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
+  /* Logo / Icon */
+  .logo-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 32px;
+  }
+
+  .logo-icon {
+    width: 72px;
+    height: 72px;
+    background: linear-gradient(135deg, var(--teal), var(--teal-dark));
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    margin-bottom: 14px;
+    box-shadow:
+      0 8px 24px rgba(13, 148, 136, 0.4),
+      0 0 40px rgba(13, 148, 136, 0.15);
+    animation: iconPulse 3s ease-in-out infinite;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .logo-icon::after {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: linear-gradient(45deg, transparent 40%, rgba(255,255,255,0.12) 50%, transparent 60%);
+    animation: shimmer 3s ease-in-out infinite;
+  }
+
+  @keyframes shimmer {
+    0%, 100% { transform: translateX(-100%) translateY(-100%); }
+    50% { transform: translateX(100%) translateY(100%); }
+  }
+
+  @keyframes iconPulse {
+    0%, 100% { box-shadow: 0 8px 24px rgba(13, 148, 136, 0.4), 0 0 40px rgba(13, 148, 136, 0.15); }
+    50% { box-shadow: 0 8px 32px rgba(13, 148, 136, 0.6), 0 0 60px rgba(13, 148, 136, 0.3); }
+  }
+
+  .logo-title {
+    font-size: 1.5rem;
+    font-weight: 900;
+    letter-spacing: -0.5px;
+    background: linear-gradient(135deg, var(--white), var(--teal-light));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .logo-sub {
+    font-size: 0.85rem;
+    color: var(--muted);
+    margin-top: 4px;
+    font-weight: 300;
+  }
+
+  /* Queue indicator */
+  .queue-badge {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(13, 148, 136, 0.1);
+    border: 1px solid rgba(13, 148, 136, 0.2);
+    border-radius: 30px;
+    padding: 8px 16px;
+    font-size: 0.8rem;
+    color: var(--teal-light);
+    margin: 0 auto 28px;
+    width: fit-content;
+    animation: fadeIn 1s 0.5s both;
+  }
+
+  .queue-dot {
+    width: 8px; height: 8px;
+    background: var(--teal-light);
+    border-radius: 50%;
+    animation: blink 1.5s ease-in-out infinite;
+  }
+
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Form */
+  .field {
+    margin-bottom: 18px;
+    animation: fadeIn 0.6s both;
+  }
+  .field:nth-child(1) { animation-delay: 0.2s; }
+  .field:nth-child(2) { animation-delay: 0.35s; }
+
+  label {
+    display: block;
+    font-size: 0.82rem;
+    color: var(--muted);
+    margin-bottom: 8px;
+    font-weight: 500;
+    letter-spacing: 0.3px;
+  }
+
+  .input-wrap {
+    position: relative;
+  }
+
+  .input-icon {
+    position: absolute;
+    right: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 1.1rem;
+    opacity: 0.5;
+    transition: opacity 0.2s;
+    pointer-events: none;
+  }
+
+  input {
+    width: 100%;
+    background: rgba(12, 26, 46, 0.6);
+    border: 1px solid rgba(148, 163, 184, 0.12);
+    border-radius: 12px;
+    padding: 13px 44px 13px 16px;
+    color: var(--white);
+    font-family: 'Tajawal', sans-serif;
+    font-size: 0.95rem;
+    transition: all 0.25s ease;
+    outline: none;
+  }
+
+  input::placeholder { color: rgba(148, 163, 184, 0.4); }
+
+  input:focus {
+    border-color: var(--teal);
+    background: rgba(12, 26, 46, 0.8);
+    box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.15), 0 4px 12px rgba(0,0,0,0.2);
+  }
+
+  input:focus + .input-icon { opacity: 1; }
+
+  /* Button */
+  .btn {
+    width: 100%;
+    padding: 15px;
+    background: linear-gradient(135deg, var(--teal), var(--teal-dark));
+    color: white;
+    border: none;
+    border-radius: 14px;
+    font-family: 'Tajawal', sans-serif;
+    font-size: 1.05rem;
+    font-weight: 700;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.25s ease;
+    margin-top: 8px;
+    animation: fadeIn 0.6s 0.5s both;
+    letter-spacing: 0.3px;
+  }
+
+  .btn::before {
+    content: '';
+    position: absolute;
+    top: 0; left: -100%;
+    width: 100%; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
+    transition: left 0.4s;
+  }
+
+  .btn:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(13, 148, 136, 0.4); }
+  .btn:hover::before { left: 100%; }
+  .btn:active { transform: translateY(0); }
+  .btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+  .btn-text { position: relative; z-index: 1; }
+
+  /* Spinner inside btn */
+  .spinner {
+    display: inline-block;
+    width: 18px; height: 18px;
+    border: 2px solid rgba(255,255,255,0.3);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    vertical-align: middle;
+    margin-left: 8px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* Success state */
+  .success-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(22, 40, 68, 0.97);
+    border-radius: 28px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 20;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s;
+  }
+  .success-overlay.show { opacity: 1; pointer-events: all; }
+
+  .success-icon {
+    width: 80px; height: 80px;
+    background: linear-gradient(135deg, var(--success), #059669);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.2rem;
+    margin-bottom: 20px;
+    animation: popIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+    box-shadow: 0 0 40px rgba(16, 185, 129, 0.4);
+  }
+  @keyframes popIn {
+    from { transform: scale(0.5); opacity: 0; }
+    to   { transform: scale(1); opacity: 1; }
+  }
+
+  .success-title {
+    font-size: 1.4rem;
+    font-weight: 900;
+    margin-bottom: 8px;
+    color: var(--white);
+  }
+  .success-msg {
+    font-size: 0.9rem;
+    color: var(--muted);
+    text-align: center;
+    line-height: 1.6;
+  }
+  .queue-num {
+    margin-top: 16px;
+    font-size: 2rem;
+    font-weight: 900;
+    background: linear-gradient(135deg, var(--teal-light), var(--accent));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .queue-label { font-size: 0.8rem; color: var(--muted); margin-top: 2px; }
+
+  .btn-back {
+    margin-top: 24px;
+    padding: 10px 28px;
+    background: rgba(13, 148, 136, 0.15);
+    border: 1px solid rgba(13, 148, 136, 0.3);
+    border-radius: 30px;
+    color: var(--teal-light);
+    cursor: pointer;
+    font-family: 'Tajawal', sans-serif;
+    font-size: 0.9rem;
+    transition: all 0.2s;
+  }
+  .btn-back:hover { background: rgba(13, 148, 136, 0.25); }
+
+  /* Error */
+  .error-msg {
+    color: #f87171;
+    font-size: 0.8rem;
+    margin-top: 8px;
+    display: none;
+    animation: fadeIn 0.3s both;
+  }
+  .error-msg.show { display: block; }
+</style>
+</head>
+<body>
+
+<!-- Animated BG -->
+<div class="bg-canvas" id="bgCanvas">
+  <div class="orb orb1"></div>
+  <div class="orb orb2"></div>
+
+  <!-- Pulse rings from center -->
+  <div class="pulse-ring" style="width:200px;height:200px;top:calc(50% - 100px);left:calc(50% - 100px);animation-delay:0s"></div>
+  <div class="pulse-ring" style="width:200px;height:200px;top:calc(50% - 100px);left:calc(50% - 100px);animation-delay:1.3s"></div>
+  <div class="pulse-ring" style="width:200px;height:200px;top:calc(50% - 100px);left:calc(50% - 100px);animation-delay:2.6s"></div>
+
+  <!-- ECG SVG -->
+  <svg class="ecg-line" viewBox="0 0 1200 60" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+    <polyline fill="none" stroke="#0d9488" stroke-width="2"
+      points="0,30 80,30 100,30 120,5 130,55 140,30 160,30 260,30 280,30 300,5 310,55 320,30 340,30 440,30 460,30 480,5 490,55 500,30 520,30 620,30 640,30 660,5 670,55 680,30 700,30 800,30 820,30 840,5 850,55 860,30 880,30 980,30 1000,30 1020,5 1030,55 1040,30 1060,30 1160,30 1180,30 1200,30"/>
+    <polyline fill="none" stroke="#0d9488" stroke-width="2"
+      points="1200,30 1280,30 1300,30 1320,5 1330,55 1340,30 1360,30 1460,30 1480,30 1500,5 1510,55 1520,30 1540,30 1640,30 1660,30 1680,5 1690,55 1700,30 1720,30 1820,30 1840,30 1860,5 1870,55 1880,30 1900,30 2000,30 2020,30 2040,5 2050,55 2060,30 2080,30 2180,30 2200,30 2220,5 2230,55 2240,30 2260,30 2360,30 2380,30 2400,30"/>
+  </svg>
+</div>
+
+<!-- Card -->
+<div class="card" id="mainCard">
+
+  <!-- Success overlay -->
+  <div class="success-overlay" id="successOverlay">
+    <div class="success-icon">✓</div>
+    <div class="success-title">تم التسجيل!</div>
+    <div class="success-msg">لقد تم إضافتك إلى قائمة الانتظار</div>
+    <div class="queue-num" id="queueNum">—</div>
+    <div class="queue-label">ترتيبك في الانتظار</div>
+    <button class="btn-back" onclick="resetForm()">تسجيل آخر ↩</button>
+  </div>
+
+  <!-- Logo -->
+  <div class="logo-wrap">
+    <div class="logo-icon">🏥</div>
+    <div class="logo-title">العيادة الذكية</div>
+    <div class="logo-sub">Smart Clinic System</div>
+  </div>
+
+  <!-- Queue live badge -->
+  <div class="queue-badge">
+    <div class="queue-dot"></div>
+    <span id="liveQueue">يتم تحميل بيانات الطابور...</span>
+  </div>
+
+  <!-- Form -->
+  <div class="field">
+    <label>الاسم الكامل</label>
+    <div class="input-wrap">
+      <input id="name" type="text" placeholder="أدخل اسمك" autocomplete="off">
+      <span class="input-icon">👤</span>
+    </div>
+  </div>
+
+  <div class="field">
+    <label>رقم الهاتف</label>
+    <div class="input-wrap">
+      <input id="phone" type="tel" placeholder="01XXXXXXXXX" autocomplete="off">
+      <span class="input-icon">📱</span>
+    </div>
+  </div>
+
+  <div class="error-msg" id="errorMsg">⚠️ يرجى ملء جميع الحقول بشكل صحيح</div>
+
+  <button class="btn" id="submitBtn" onclick="send()">
+    <span class="btn-text" id="btnText">تسجيل في الطابور</span>
+  </button>
+</div>
+
+<script>
+const BASE_URL = window.location.origin;
+
+// Live queue count
+async function updateQueueBadge() {
+  try {
+    const q = await (await fetch(`${BASE_URL}/queue`)).json();
+    const c = await (await fetch(`${BASE_URL}/current`)).json();
+    const total = q.length + (c ? 1 : 0);
+    document.getElementById("liveQueue").textContent =
+      total > 0 ? `${total} شخص في الانتظار حالياً` : "لا يوجد انتظار — سيتم فحصك مباشرة";
+  } catch { }
+}
+
+setInterval(updateQueueBadge, 3000);
+updateQueueBadge();
+
+// Floating medical symbols
+const symbols = ["💊","🩺","🩻","❤️","🧬","💉","🩸","🫀","🧪","⚕️","🏥","🌡️"];
+const canvas = document.getElementById("bgCanvas");
+
+function spawnFloat() {
+  const el = document.createElement("div");
+  el.className = "med-float";
+  el.textContent = symbols[Math.floor(Math.random() * symbols.length)];
+  el.style.left = Math.random() * 100 + "vw";
+  el.style.fontSize = (1.5 + Math.random() * 3) + "rem";
+  const dur = 10 + Math.random() * 15;
+  el.style.animationDuration = dur + "s";
+  el.style.animationDelay = Math.random() * 5 + "s";
+  canvas.appendChild(el);
+  setTimeout(() => el.remove(), (dur + 5) * 1000);
+}
+
+for (let i = 0; i < 8; i++) setTimeout(spawnFloat, i * 800);
+setInterval(spawnFloat, 2500);
+
+// Send
+async function send() {
+  const nameEl   = document.getElementById("name");
+  const phoneEl  = document.getElementById("phone");
+  const btn      = document.getElementById("submitBtn");
+  const btnText  = document.getElementById("btnText");
+  const errorMsg = document.getElementById("errorMsg");
+
+  errorMsg.classList.remove("show");
+
+  if (!nameEl.value.trim() || !phoneEl.value.trim()) {
+    errorMsg.classList.add("show");
+    return;
+  }
+
+  btn.disabled = true;
+  btnText.innerHTML = `جاري الإرسال <span class="spinner"></span>`;
+
+  try {
+    const res = await fetch(`${BASE_URL}/add`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name: nameEl.value.trim(), phone: phoneEl.value.trim() })
+    });
+
+    if (res.ok) {
+      const data = await res.json();
+      document.getElementById("queueNum").textContent = data.queuePosition || "—";
+      document.getElementById("successOverlay").classList.add("show");
+      updateQueueBadge();
+    } else {
+      errorMsg.textContent = "⚠️ حدث خطأ في الخادم، حاول مرة أخرى";
+      errorMsg.classList.add("show");
+    }
+  } catch {
+    errorMsg.textContent = "⚠️ لا يمكن الاتصال بالخادم";
+    errorMsg.classList.add("show");
+  } finally {
+    btn.disabled = false;
+    btnText.textContent = "تسجيل في الطابور";
+  }
+}
+
+function resetForm() {
+  document.getElementById("successOverlay").classList.remove("show");
+  document.getElementById("name").value = "";
+  document.getElementById("phone").value = "";
+}
+
+// Enter key support
+document.addEventListener("keydown", e => {
+  if (e.key === "Enter") send();
+});
+</script>
+
+</body>
+</html>
